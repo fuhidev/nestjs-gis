@@ -1,11 +1,11 @@
 {
-  "name": "@nestjsplus/nestjs-package-starter",
-  "version": "1.0.0",
+  "name": "nestjs-gis",
+  "version": "1.1.1",
   "description": "NestJS npm package starter",
   "author": "John Biundo <johnfbiundo@gmail.com>",
   "license": "MIT",
   "readmeFilename": "README.md",
-  "main": "dist/test.js",
+  "main": "dist/index.js",
   "files": [
     "dist/**/*",
     "*.md"
@@ -33,13 +33,31 @@
   },
   "bugs": "https://github.com/nestjsplus/nestjs-package-starter",
   "peerDependencies": {
-    "@nestjs/common": "^6.0.0"
+    "@nestjs/common": "^6.0.0",
+    "@nestjsx/crud": "^4.6.0",
+    "@nestjsx/crud-typeorm": "^4.6.0",
+    "geojson": "^0.5.0",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.2",
+    "rxjs": "^7.2.0",
+    "terraformer-arcgis-parser": "^1.1.0",
+    "terraformer-wkt-parser": "^1.2.1",
+    "typeorm": "^0.2.29"
   },
   "dependencies": {},
   "devDependencies": {
     "@nestjs/common": "^6.0.0",
     "@nestjs/core": "^6.0.0",
     "@nestjs/platform-express": "^6.0.0",
+    "@nestjsx/crud": "^4.6.0",
+    "@nestjsx/crud-typeorm": "^4.6.0",
+    "geojson": "^0.5.0",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.2",
+    "rxjs": "^7.2.0",
+    "terraformer-arcgis-parser": "^1.1.0",
+    "terraformer-wkt-parser": "^1.2.1",
+    "typeorm": "^0.2.29",
     "@nestjs/testing": "6.1.1",
     "@types/express": "4.16.1",
     "@types/jest": "24.0.11",
