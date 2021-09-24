@@ -8,3 +8,4 @@ export * from './project-geometry';
 export * from './transformer';
 export * from './decorators';
 export * from './typeorm';
+export * from './arcgis-proxy'
