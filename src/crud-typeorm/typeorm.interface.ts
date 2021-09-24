@@ -1,14 +1,13 @@
 import { CrudRequest } from '@nestjsx/crud';
 import { ParsedRequestParams } from '@nestjsx/crud-request';
 import { SpatialReference } from '../arcgis/interfaces/spatial-reference';
-import { PARSED_CRUD_REQUEST_KEY } from '@nestjsx/crud/lib/constants';
 import { Envelope } from 'terraformer-arcgis-parser';
-import { ArgumentsHost, createParamDecorator } from '@nestjs/common';
 import { BaseEntity } from 'typeorm';
 import { Geometry } from 'terraformer-arcgis-parser';
 
 export interface FilterGeoBody{
-    geometry: Geometry;
+  geometry: Geometry | GeoJSON.GeometryObject;
+  fGeo?:'geojson' | 'esri'
 }
 
 export interface GISParsedRequestParams extends ParsedRequestParams {
@@ -23,4 +22,5 @@ export interface GISCrudRequest extends CrudRequest {
 }
 
 export class GISEntity extends BaseEntity {
+  objectId: number;
 }

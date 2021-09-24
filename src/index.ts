@@ -6,3 +6,5 @@ export * from './crud-typeorm';
 export * from './places';
 export * from './project-geometry';
 export * from './transformer';
+export * from './decorators';
+export * from './typeorm';
