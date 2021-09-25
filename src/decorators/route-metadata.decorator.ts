@@ -157,7 +157,7 @@ export class RouteMedataFactory {
       result['geometryType'] =
         geoCol.spatialFeatureType &&
         (geoCol.spatialFeatureType.replace('esriGeometry', '') as GeometryType);
-      if (geoCol.comment) result['renderer'] = JSON.parse(geoCol.comment);
+      if ((geoCol as ColumnOptions).renderer) result['renderer'] = JSON.parse((geoCol as ColumnOptions).renderer);
     }
     return result;
   }
