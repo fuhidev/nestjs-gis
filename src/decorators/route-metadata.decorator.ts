@@ -145,6 +145,7 @@ export class RouteMedataFactory {
     const mtd = metadatas.find(
       f => (f.options as ColumnOptions).isDisplayColumn,
     );
+    
     const result: Metadata = {
       displayColumn: mtd
         ? mtd.propertyName
@@ -157,7 +158,10 @@ export class RouteMedataFactory {
       result['geometryType'] =
         geoCol.spatialFeatureType &&
         (geoCol.spatialFeatureType.replace('esriGeometry', '') as GeometryType);
-      if ((geoCol as ColumnOptions).renderer) result['renderer'] = JSON.parse((geoCol as ColumnOptions).renderer);
+        const metadata = metadatas.find(f => f.propertyName === geoCol.propertyName);
+      if (metadata && metadata.options &&  (metadata.options as ColumnOptions).renderer){
+        
+        result['renderer'] = JSON.parse((metadata.options as ColumnOptions).renderer);}
     }
     return result;
   }
