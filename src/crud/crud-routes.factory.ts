@@ -8,7 +8,12 @@ import {
   ROUTE_ARGS_METADATA,
 } from '@nestjs/common/constants';
 import { RouteParamtypes } from '@nestjs/common/enums/route-paramtypes.enum';
-import { CrudOptions, CrudRequestInterceptor, CrudResponseInterceptor, MergedCrudOptions } from '@nestjsx/crud';
+import {
+  CrudOptions,
+  CrudRequestInterceptor,
+  CrudResponseInterceptor,
+  MergedCrudOptions,
+} from '@nestjsx/crud';
 import {
   ACTION_NAME_METADATA,
   CRUD_OPTIONS_METADATA,
@@ -18,13 +23,10 @@ import { BaseEntity, getRepository } from 'typeorm';
 import { GISCrudRequestInterceptor } from './gis-crud-request.interceptor';
 
 export class GISCrudRoutesFactory {
-  private options:MergedCrudOptions;
-  constructor(
-    private target,
-  ) {
-  }
+  private options: MergedCrudOptions;
+  constructor(private target) {}
   create() {
-    this.options = Reflect.getMetadata(CRUD_OPTIONS_METADATA,this.target)
+    this.options = Reflect.getMetadata(CRUD_OPTIONS_METADATA, this.target);
     this.getManyBasePost();
     this.getOneBase();
 
@@ -41,8 +43,8 @@ export class GISCrudRoutesFactory {
         index: 0,
         factory: (_, ctx) => {
           return (typeof ctx === 'function'
-            ? ctx
-            : ctx.switchToHttp().getRequest())[PARSED_CRUD_REQUEST_KEY];
+            ? ctx.switchToHttp().getRequest()
+            : ctx)[PARSED_CRUD_REQUEST_KEY];
         },
         data: undefined,
         pipes: [],
@@ -53,13 +55,13 @@ export class GISCrudRoutesFactory {
       ROUTE_ARGS_METADATA,
       { ...requestArg },
       this.target,
-      'getManyBasePost'
+      'getManyBasePost',
     );
     Reflect.defineMetadata(
       ROUTE_ARGS_METADATA,
       { ...requestArg },
       this.target,
-      'getOneBase'
+      'getOneBase',
     );
   }
 
@@ -68,13 +70,13 @@ export class GISCrudRoutesFactory {
       PARAMTYPES_METADATA,
       [Object],
       this.target.prototype,
-      'getManyBasePost'
+      'getManyBasePost',
     );
     Reflect.defineMetadata(
       PARAMTYPES_METADATA,
       [Object],
       this.target.prototype,
-      'getOneBase'
+      'getOneBase',
     );
   }
 
@@ -82,22 +84,22 @@ export class GISCrudRoutesFactory {
     Reflect.defineMetadata(
       INTERCEPTORS_METADATA,
       [GISCrudRequestInterceptor, CrudResponseInterceptor],
-      this.target.prototype.getManyBase
+      this.target.prototype.getManyBase,
     );
     Reflect.defineMetadata(
       INTERCEPTORS_METADATA,
       [GISCrudRequestInterceptor, CrudResponseInterceptor],
-      this.target.prototype.getManyBasePost
+      this.target.prototype.getManyBasePost,
     );
     Reflect.defineMetadata(
       INTERCEPTORS_METADATA,
       [GISCrudRequestInterceptor, CrudResponseInterceptor],
-      this.target.prototype.getOneBase
+      this.target.prototype.getOneBase,
     );
     Reflect.defineMetadata(
       INTERCEPTORS_METADATA,
       [GISCrudRequestInterceptor, CrudResponseInterceptor],
-      this.target.prototype.createOneBase
+      this.target.prototype.createOneBase,
     );
   }
 
@@ -105,12 +107,12 @@ export class GISCrudRoutesFactory {
     Reflect.defineMetadata(
       ACTION_NAME_METADATA,
       'Read-All-Post',
-      this.target.prototype.getManyBasePost
+      this.target.prototype.getManyBasePost,
     );
     Reflect.defineMetadata(
       ACTION_NAME_METADATA,
       'Read-One-Post',
-      this.target.prototype.getOneBase
+      this.target.prototype.getOneBase,
     );
   }
 
@@ -129,18 +131,20 @@ export class GISCrudRoutesFactory {
     RequestMapping({ method: RequestMethod.POST, path: '/query' })(
       this.target.prototype,
       null,
-      { value: this.target.prototype.getManyBasePost }
+      { value: this.target.prototype.getManyBasePost },
     );
 
-    const primaryParams = Object.keys(this.options.params).filter(key=>this.options.params[key].primary &&
-      !this.options.params[key].disabled )
+    const primaryParams = Object.keys(this.options.params).filter(
+      key =>
+        this.options.params[key].primary && !this.options.params[key].disabled,
+    );
 
-    const path = primaryParams.map((param) => `/:${param}`).join('');
+    const path = primaryParams.map(param => `/:${param}`).join('');
 
     RequestMapping({ method: RequestMethod.GET, path })(
       this.target.prototype,
       null,
-      { value: this.target.prototype.getOneBase }
+      { value: this.target.prototype.getOneBase },
     );
   }
 }
