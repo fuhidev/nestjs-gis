@@ -28,7 +28,6 @@ export class GISCrudRoutesFactory {
   create() {
     this.options = Reflect.getMetadata(CRUD_OPTIONS_METADATA, this.target);
     this.getManyBasePost();
-    this.getOneBase();
 
     this.setRouteArgs();
     this.setRouteArgsTypes();
@@ -57,12 +56,6 @@ export class GISCrudRoutesFactory {
       this.target,
       'getManyBasePost',
     );
-    Reflect.defineMetadata(
-      ROUTE_ARGS_METADATA,
-      { ...requestArg },
-      this.target,
-      'getOneBase',
-    );
   }
 
   private setRouteArgsTypes() {
@@ -72,34 +65,17 @@ export class GISCrudRoutesFactory {
       this.target.prototype,
       'getManyBasePost',
     );
-    Reflect.defineMetadata(
-      PARAMTYPES_METADATA,
-      [Object],
-      this.target.prototype,
-      'getOneBase',
-    );
   }
 
   private setInterceptors() {
-    Reflect.defineMetadata(
-      INTERCEPTORS_METADATA,
-      [GISCrudRequestInterceptor, CrudResponseInterceptor],
-      this.target.prototype.getManyBase,
-    );
-    Reflect.defineMetadata(
-      INTERCEPTORS_METADATA,
-      [GISCrudRequestInterceptor, CrudResponseInterceptor],
-      this.target.prototype.getManyBasePost,
-    );
-    Reflect.defineMetadata(
-      INTERCEPTORS_METADATA,
-      [GISCrudRequestInterceptor, CrudResponseInterceptor],
-      this.target.prototype.getOneBase,
-    );
-    Reflect.defineMetadata(
-      INTERCEPTORS_METADATA,
-      [GISCrudRequestInterceptor, CrudResponseInterceptor],
-      this.target.prototype.createOneBase,
+    ['getManyBase', 'getManyBasePost', 'getOneBase', 'createOneBase'].forEach(
+      route => {
+        Reflect.defineMetadata(
+          INTERCEPTORS_METADATA,
+          [GISCrudRequestInterceptor, CrudResponseInterceptor],
+          this.target.prototype[route],
+        );
+      },
     );
   }
 
@@ -109,21 +85,11 @@ export class GISCrudRoutesFactory {
       'Read-All-Post',
       this.target.prototype.getManyBasePost,
     );
-    Reflect.defineMetadata(
-      ACTION_NAME_METADATA,
-      'Read-One-Post',
-      this.target.prototype.getOneBase,
-    );
   }
 
   private getManyBasePost() {
     this.target.prototype.getManyBasePost = function getManyBasePost(req) {
       return this.service.getMany(req);
-    };
-  }
-  private getOneBase() {
-    this.target.prototype.getOneBase = function getOneBase(req) {
-      return this.service.getOne(req);
     };
   }
 
