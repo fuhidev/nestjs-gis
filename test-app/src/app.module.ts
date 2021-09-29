@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ArcgisProxyModule, GeometryModule } from 'nestjs-gis';
+import { ArcgisProxyModule, GeometryModule,systemEntities,SystemManagerModule } from 'nestjs-gis';
 import { CayXanhModule } from './cay-xanh/cay-xanh.module';
 import { CayXanhEntity } from './cay-xanh/cay-xanh.entity';
 
@@ -17,10 +17,10 @@ import { CayXanhEntity } from './cay-xanh/cay-xanh.entity';
       port: 1433,
       username: 'sa',
       password: 'Ditagis123',
-      database: 'KhuCongNgheCao',
+      database: 'GISCLOUD',
       synchronize: false,
       logging: false,
-      entities: [CayXanhEntity],
+      entities: [CayXanhEntity,...systemEntities],
     }),
     GeometryModule.forRoot({
       srs: {
@@ -40,6 +40,7 @@ import { CayXanhEntity } from './cay-xanh/cay-xanh.entity';
       arcUrl: 'http://ditagis.com/arcgis',
       route: 'ditagis',
     }),
+    SystemManagerModule.forRoot({connection:'gis'})
   ],
   controllers: [AppController],
   providers: [AppService],
