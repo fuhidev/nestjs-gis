@@ -68,7 +68,7 @@ export class GISCrudRoutesFactory {
   }
 
   private setInterceptors() {
-    ['getManyBase', 'getManyBasePost', 'getOneBase', 'createOneBase'].forEach(
+    ['getManyBase', 'getManyBasePost', 'getOneBase', 'createOneBase','updateOneBase','replaceOneBase','createManyBase'].forEach(
       route => {
         Reflect.defineMetadata(
           INTERCEPTORS_METADATA,
