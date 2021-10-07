@@ -11,32 +11,4 @@ export class ApplicationService extends TypeOrmCrudService<ApplicationEntity>{
     ) {
         super(repo);
     }
-
-    async getMany(req: CrudRequest) {
-        const result = await super.getMany(req);
-        if (this.decidePagination(req.parsed, req.options)) {
-            (result as GetManyDefaultResponse<ApplicationEntity>).data.forEach(f => {
-                if (f.config) {
-                    f.config = JSON.parse(f.config);
-                }
-            })
-        } else {
-            (result as ApplicationEntity[]).forEach(f => {
-                if (f.config) {
-                    f.config = JSON.parse(f.config);
-                }
-            });
-        }
-
-
-        return result;
-    }
-
-    async getOne(req: CrudRequest) {
-        const result = await super.getOne(req) as ApplicationEntity;
-        if (result.config) {
-            result.config = JSON.parse(result.config);
-        }
-        return result;
-    }
 }
