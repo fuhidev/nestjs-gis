@@ -132,6 +132,7 @@ export class AuthService {
       'isView=lyrs.isView',
       'isCreate=lyrs.isCreate',
       'isDelete=lyrs.isDelete',
+      'isEdit=lyrs.isEdit',
       'definition=lyrs.definition',
       'url=lr.url',
       'datasetId=dts.datasetId',
