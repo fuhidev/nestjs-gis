@@ -160,7 +160,10 @@ export class RouteMedataFactory {
         (geoCol.spatialFeatureType.replace('esriGeometry', '') as GeometryType);
         const metadata = metadatas.find(f => f.propertyName === geoCol.propertyName);
       if (metadata && metadata.options &&  (metadata.options as ColumnOptions).renderer){
-        
+        // Reflect.getMetadata(
+        //   CONTROLLER_PATH_ENTITY,
+        //   columnMeta.relationMetadata.type,
+        // )
         result['renderer'] = JSON.parse((metadata.options as ColumnOptions).renderer);}
     }
     return result;

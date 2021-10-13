@@ -39,7 +39,7 @@ export class ApplicationEntity {
   @Column({
     name: 'Config',
     type: 'nvarchar',
-    length: 4000,
+    length: 'MAX',
     nullable: true,
     default: '{}',
     transformer: {

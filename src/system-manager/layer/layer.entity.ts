@@ -42,7 +42,7 @@ export class LayerEntity {
   @Column({
     name: 'Config',
     type: 'nvarchar',
-    length: 4000,
+    length: 'MAX',
     nullable: true,
     transformer: {
       from: value => {
