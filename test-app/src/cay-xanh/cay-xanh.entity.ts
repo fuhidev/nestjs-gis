@@ -1,7 +1,7 @@
 import { Column, geometryTransformer, GeometryTypeEnum, Point } from 'nestjs-gis';
 import { Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity('CayXanh')
+@Entity('HTKT_CayXanh_CayXanh')
 export class CayXanhEntity {
     @PrimaryGeneratedColumn() id:string;
     @Column({

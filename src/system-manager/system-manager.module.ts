@@ -36,7 +36,6 @@ export const systemEntities = [
 @Module({})
 export class SystemManagerModule {
   static forRoot(options?: SystemManagerOptions): DynamicModule {
-    console.error(options)
     setOption(options);
     return {
       module: SystemManagerModule,

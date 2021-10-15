@@ -2,7 +2,9 @@ import { Get } from '@nestjs/common';
 import { PATH_METADATA } from '@nestjs/common/constants';
 import { CRUD_OPTIONS_METADATA } from '@nestjsx/crud/lib/constants';
 import { ColumnOptions } from '../typeorm/decorators/column';
-import { getMetadataArgsStorage, Repository } from 'typeorm';
+import { getMetadataArgsStorage, getRepository, Repository } from 'typeorm';
+import { LayerEntity } from '../system-manager';
+import { moduleOptions } from '../token';
 export const CONTROLLER_PATH_ENTITY = 'CONTROLLER_PATH_ENTITY';
 export interface Relation {
   displayColumn: string;
@@ -49,7 +51,7 @@ export const RouteMetadata = () => target => {
 
 export class RouteMedataFactory {
   constructor(private target) {}
-  static getMetadata(repo: Repository<any>): Metadata {
+  static async getMetadata(repo: Repository<any>): Promise<Metadata> {
     const columns = [];
 
     function getColumnType(type: string | Function) {
@@ -145,7 +147,7 @@ export class RouteMedataFactory {
     const mtd = metadatas.find(
       f => (f.options as ColumnOptions).isDisplayColumn,
     );
-    
+
     const result: Metadata = {
       displayColumn: mtd
         ? mtd.propertyName
@@ -158,14 +160,33 @@ export class RouteMedataFactory {
       result['geometryType'] =
         geoCol.spatialFeatureType &&
         (geoCol.spatialFeatureType.replace('esriGeometry', '') as GeometryType);
-        const metadata = metadatas.find(f => f.propertyName === geoCol.propertyName);
-      if (metadata && metadata.options &&  (metadata.options as ColumnOptions).renderer){
+      const metadata = metadatas.find(
+        f => f.propertyName === geoCol.propertyName,
+      );
+      if (
+        metadata &&
+        metadata.options &&
+        (metadata.options as ColumnOptions).renderer
+      ) {
         // Reflect.getMetadata(
         //   CONTROLLER_PATH_ENTITY,
         //   columnMeta.relationMetadata.type,
         // )
-        result['renderer'] = JSON.parse((metadata.options as ColumnOptions).renderer);}
+        result['renderer'] = JSON.parse(
+          (metadata.options as ColumnOptions).renderer,
+        );
+      }
+      try {
+        const layerEntity = await getRepository(LayerEntity).findOne(
+          repo.metadata.tableName,
+        );
+        if (layerEntity) {
+          const config = layerEntity.config as any;
+          Object.assign(result, config);
+        }
+      } catch (error) {}
     }
+    result['srs'] = moduleOptions.srs;
     return result;
   }
   create() {

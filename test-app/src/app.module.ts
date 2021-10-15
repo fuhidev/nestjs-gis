@@ -18,7 +18,7 @@ import { CayXanhEntity } from './cay-xanh/cay-xanh.entity';
       username: 'sa',
       password: 'Ditagis123',
       database: 'GISCLOUD',
-      synchronize: false,
+      synchronize: true,
       logging: false,
       entities: [CayXanhEntity,...systemEntities],
     }),
