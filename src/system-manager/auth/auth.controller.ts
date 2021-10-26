@@ -82,11 +82,11 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @Get('isaccess/:idApp')
   async isAccessApp(@Request() req, @Param('idApp') idApp: string) {
-    const application = this.applicationService.findOne(idApp, {
+    const application = await this.applicationService.findOne(idApp, {
       select: ['applicationName'],
     });
     if (!application) {
-      throw new NotFoundException('Không tồn tại ứng dụng');
+      throw new UnauthorizedException('Không tồn tại ứng dụng');
     }
     const logEntity = this.logService.repo.create();
     logEntity.actionType = {
@@ -96,7 +96,7 @@ export class AuthController {
     logEntity.userId = req.user.userId;
 
     logEntity.description =
-      'Truy cập ứng dụng ' + (await application).applicationName;
+      'Truy cập ứng dụng ' +  application.applicationName;
     await this.logService.repo.save(logEntity);
     const isAccess = this.authService.isAccess({
       username: req.user.username,

@@ -64,9 +64,10 @@ export class RouteMedataFactory {
         : type) as string;
     }
 
-    const metadatas = getMetadataArgsStorage().columns.filter(
-      f => f.target === repo.target,
-    );
+    const allColumns = getMetadataArgsStorage().columns;
+
+    const metadatas = allColumns.filter(f => f.target === repo.target);
+
     repo.metadata.columns.forEach(columnMeta => {
       const metadata = metadatas.find(
         f => f.propertyName === columnMeta.propertyName,
@@ -91,8 +92,12 @@ export class RouteMedataFactory {
         readonly: columnMeta.isCreateDate || columnMeta.isGenerated,
       };
       if (columnMeta.relationMetadata) {
-        const relationMetadatas = getMetadataArgsStorage().columns.filter(
-          f => f.target === columnMeta.relationMetadata.type,
+        const relationMetadatas = allColumns.filter(
+          f =>
+            f.target === columnMeta.relationMetadata.type ||
+            (typeof f.target === 'function' &&
+              typeof columnMeta.relationMetadata.type === 'function' &&
+              columnMeta.relationMetadata.type.prototype instanceof f.target),
         );
         const primaryColumn = relationMetadatas.find(f => f.options.primary)
           .propertyName;
@@ -115,7 +120,7 @@ export class RouteMedataFactory {
     });
 
     repo.metadata.oneToManyRelations.forEach(columnMeta => {
-      const relationMetadatas = getMetadataArgsStorage().columns.filter(
+      const relationMetadatas = allColumns.filter(
         f => f.target === columnMeta.type,
       );
       const primaryColumn = relationMetadatas.find(f => f.options.primary)

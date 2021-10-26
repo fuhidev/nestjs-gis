@@ -40,7 +40,9 @@ import { CayXanhEntity } from './cay-xanh/cay-xanh.entity';
       arcUrl: 'http://ditagis.com/arcgis',
       route: 'ditagis',
     }),
-    SystemManagerModule.forRoot({connection:'gis'})
+    SystemManagerModule.forRoot({connection:'gis',jwt:{
+      secret:'hieu '
+    }})
   ],
   controllers: [AppController],
   providers: [AppService],

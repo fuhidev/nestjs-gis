@@ -1,7 +1,7 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
-import { jwtConstants } from './auth.constant';
+import { systemManagerOption } from '../system-manager.token';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -15,7 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ])
       ,
       ignoreExpiration: false,
-      secretOrKey: jwtConstants.secret,
+      secretOrKey:systemManagerOption.jwt.secret
     });
   }
 
@@ -27,4 +27,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       roleId:payload.roleId
     };
   }
+
+
 }
