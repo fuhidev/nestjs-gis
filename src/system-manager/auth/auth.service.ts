@@ -53,19 +53,6 @@ export class AuthService {
       userId: user.userId,
       displayName: user.displayName,
     };
-    // // tao refreshToken
-    // const refreshToken = this.jwtService.sign(
-    //   { userId: user.userId },
-    //   {
-    //     expiresIn: '10 days',
-    //   }
-    // );
-
-    // const refreshTokenEntity =
-    //   (await this.refreshTokenRepo.findOne({ userId: user.userId })) ||
-    //   this.refreshTokenRepo.create({ userId: user.userId });
-    // refreshTokenEntity.refreshToken = refreshToken;
-    // await this.refreshTokenRepo.save(refreshTokenEntity);
     return {
       userId: user.userId,
       username: user.username,

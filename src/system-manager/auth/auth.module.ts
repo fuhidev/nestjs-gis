@@ -13,13 +13,14 @@ import { LocalStrategy } from './local.strategy';
 
 @Module({
   imports: [
-    JwtModule.register(
-      systemManagerOption.jwt),
     PassportModule,
     UserModule,
     LoggerModule,
     LayerModule,
     ApplicationModule,
+    JwtModule.registerAsync({
+      useFactory: () => systemManagerOption.jwt,
+    }),
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
@@ -27,9 +28,9 @@ import { LocalStrategy } from './local.strategy';
     AuthService,
     LocalStrategy,
     JwtStrategy,
-    JwtModule,
     PassportModule,
     UserModule,
+    JwtModule,
   ],
 })
 export class AuthModule {}
