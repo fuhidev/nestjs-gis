@@ -41,7 +41,7 @@ export class GISCrudRoutesFactory {
       [`${PARSED_CRUD_REQUEST_KEY}${CUSTOM_ROUTE_AGRS_METADATA}:${0}`]: {
         index: 0,
         factory: (_, ctx) => {
-          return (typeof ctx === 'function'
+          return (ctx.switchToHttp
             ? ctx.switchToHttp().getRequest()
             : ctx)[PARSED_CRUD_REQUEST_KEY];
         },
