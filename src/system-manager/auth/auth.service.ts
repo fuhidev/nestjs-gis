@@ -11,7 +11,7 @@ export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
-    @InjectEntityManager() private entityManager: EntityManager
+    @InjectEntityManager() private entityManager: EntityManager,
   ) {}
   verifyToken(token: string) {
     return this.jwtService.verify(token);
@@ -28,7 +28,7 @@ export class AuthService {
       {
         select: ['password', 'displayName', 'userId', 'statusId', 'roleId'],
         relations: ['role'],
-      }
+      },
     );
 
     if (user && compareSync(password, user.password)) {
@@ -60,7 +60,7 @@ export class AuthService {
       accessToken: this.jwtService.sign(payload),
       roleId: user.roleId,
       expired: Math.round(
-        new Date(Date.now() + 7*24 * 60 * 60 * 1000).getTime() / 1000
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).getTime() / 1000,
       ),
     };
   }
@@ -70,11 +70,14 @@ export class AuthService {
       select: ['username', 'displayName'],
     });
     return {
-      accessToken: this.jwtService.sign({userId:payload.userId},{
-        expiresIn:'15m',
-      }),
+      accessToken: this.jwtService.sign(
+        { userId: payload.userId },
+        {
+          expiresIn: '15m',
+        },
+      ),
       expired: Math.round(
-        new Date(Date.now() + 15 * 60 * 1000).getTime()/1000
+        new Date(Date.now() + 15 * 60 * 1000).getTime() / 1000,
       ),
     };
   }
@@ -90,51 +93,55 @@ export class AuthService {
       },
       {
         relations: ['role', 'role.applications'],
-      }
+      },
     );
     return user.role.applications.some(
-      (f) => f.applicationId === idApp && f.isEnabled
+      f => f.applicationId === idApp && f.isEnabled,
     );
   }
 
   async getCapabilities(params: { userId: string }): Promise<string[]> {
     const capabilities: Array<any> = await this.entityManager.query(
       `select applicationId=c.applicationId from sys_user a inner join sys_role b on a.roleId=b.roleId inner join sys_role_application c on b.roleId=c.roleId where userId=@0`,
-      [params.userId]
+      [params.userId],
     );
-    return capabilities.map((m) => m.applicationId);
+    return capabilities.map(m => m.applicationId);
   }
 
   async getLayerInfos(params: { username: string }) {
     const { username } = params;
-    const result = await  getRepository(UserEntity).createQueryBuilder('usr')
-    .innerJoin('usr.role','rl')
-    .innerJoin('rl.layers','lyrs')
-    .innerJoin('lyrs.layer','lr')
-    .innerJoin('lr.dataset','dts')
-    .where('usr.username=:usn',{usn:username})
-    .select([
-      'layerId = lr.layerId',
-      'layerName = lr.layerName',
-      'isView=lyrs.isView',
-      'isCreate=lyrs.isCreate',
-      'isDelete=lyrs.isDelete',
-      'isEdit=lyrs.isEdit',
-      'definition=lyrs.definition',
-      'url=lr.url',
-      'datasetId=dts.datasetId',
-      'datasetName=dts.datasetName',
-    ])
-    .getRawMany();
-    result.forEach(r=>{
+    const result = await getRepository(UserEntity)
+      .createQueryBuilder('usr')
+      .innerJoin('usr.role', 'rl')
+      .innerJoin('rl.layers', 'lyrs')
+      .innerJoin('lyrs.layer', 'lr')
+      .innerJoin('lr.dataset', 'dts')
+      .where('usr.username=:usn', { usn: username })
+      .select([
+        'layerId = lr.layerId',
+        'layerName = lr.layerName',
+        'isView=lyrs.isView',
+        'isCreate=lyrs.isCreate',
+        'isDelete=lyrs.isDelete',
+        'isEdit=lyrs.isEdit',
+        'definition=lyrs.definition',
+        'url=lr.url',
+        'outFields = lyrs.outFields',
+        'queryFields = lyrs.queryFields',
+        'updateFields = lyrs.updateFields',
+        'datasetId=dts.datasetId',
+        'datasetName=dts.datasetName',
+      ])
+      .getRawMany();
+    result.forEach(r => {
       r.dataset = {
-        datasetId:r.datasetId,
-        datasetName:r.datasetName
+        datasetId: r.datasetId,
+        datasetName: r.datasetName,
       };
-      r.isVisible = true
+      r.isVisible = true;
       delete r.datasetId;
       delete r.datasetName;
-    })
+    });
     return result;
     // return user.role.layers.forEach((roleLayer) => {
     //   const layer = roleLayer.layer;
