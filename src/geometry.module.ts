@@ -1,13 +1,12 @@
-import { DynamicModule, Module, Provider } from '@nestjs/common';
-import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
-import { ProjectGeometryService } from './project-geometry/project-geometry.service';
+import { DynamicModule, Module } from '@nestjs/common';
 import { GeometryService } from './geometry.service';
 import { PlacesModule } from './places/places.module';
 import { ProjectGeometryModule } from './project-geometry/project-geometry.module';
-import { GeometryModuleOptions, setOptions, TOKEN } from './token';
+import { GeometryModuleOptions, setOptions } from './token';
+import { ImportExcelModule } from './import-excel/import-excel.module';
 
 @Module({
-  imports: [ProjectGeometryModule, PlacesModule],
+  imports: [ProjectGeometryModule, PlacesModule,ImportExcelModule],
   providers: [GeometryService],
   exports: [GeometryService],
 })
