@@ -36,7 +36,9 @@ export class LoggerController {
 
     @Get('action-type')
     @UseInterceptors(new CrudRequestInterceptor())
-    getManyActionType(@Request() @ParsedRequest() req) {
+    getManyActionType(@Request() @ParsedRequest() req:CrudRequest) {
+        req.parsed.sort = [];
+        req.options.query={};
         return this.actionTypeService.getMany(req);
     }
 
