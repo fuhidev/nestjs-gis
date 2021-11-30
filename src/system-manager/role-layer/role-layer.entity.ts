@@ -1,9 +1,15 @@
-import { Entity, Column, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { RoleEntity } from "../role/role.entity";
-import { LayerEntity } from "../layer/layer.entity";
+import {
+  Entity,
+  Column,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { RoleEntity } from '../role/role.entity';
+import { LayerEntity } from '../layer/layer.entity';
 
 @Entity({
-  name: 'SYS_Role_Layer'
+  name: 'SYS_Role_Layer',
 })
 export class RoleLayerEntity {
   @PrimaryGeneratedColumn('uuid', { name: 'ID' })
@@ -13,14 +19,20 @@ export class RoleLayerEntity {
   roleId: string;
 
   @JoinColumn({ name: 'RoleId' })
-  @ManyToOne(() => RoleEntity, e => e.roleId, { cascade:['remove'], onDelete: 'CASCADE' })
+  @ManyToOne(() => RoleEntity, e => e.roleId, {
+    cascade: ['remove'],
+    onDelete: 'CASCADE',
+  })
   role: RoleEntity;
 
   @Column({ name: 'LayerId', nullable: false, type: 'string' })
   layerId: string;
 
   @JoinColumn({ name: 'LayerId' })
-  @ManyToOne(() => LayerEntity, e => e.layerId, { cascade:['remove'], onDelete: 'CASCADE' })
+  @ManyToOne(() => LayerEntity, e => e.layerId, {
+    cascade: ['remove'],
+    onDelete: 'CASCADE',
+  })
   layer: LayerEntity;
 
   @Column({ name: 'IsEdit', nullable: false, default: false })
@@ -33,4 +45,10 @@ export class RoleLayerEntity {
   isDelete: boolean;
   @Column({ name: 'Definition', nullable: true, default: '1=1' })
   definition: string;
+  @Column({ name: 'OutFields', nullable: true, default: null })
+  outFields: string;
+  @Column({ name: 'QueryFields', nullable: true, default: null })
+  queryFields: string;
+  @Column({ name: 'UpdateFields', nullable: true, default: null })
+  updateFields: string;
 }
