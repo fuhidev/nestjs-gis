@@ -1,6 +1,6 @@
 {
   "name": "nestjs-gis",
-  "version": "2.4.5",
+  "version": "2.5.0",
   "description": "NestJS npm package starter",
   "author": "John Biundo <johnfbiundo@gmail.com>",
   "license": "MIT",
@@ -46,9 +46,12 @@
     "terraformer-wkt-parser": "^1.2.1",
     "typeorm": "^0.2.29",
     "bcrypt": ">=4.0.0",
-    "passport-local": "~1.0.0"
+    "passport-local": "~1.0.0",
+    "exceljs": "^4.3.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "exceljs": "^4.3.0"
+  },
   "devDependencies": {
     "@nestjs/common": "^7.6.0",
     "@nestjs/core": "^7.6.0",

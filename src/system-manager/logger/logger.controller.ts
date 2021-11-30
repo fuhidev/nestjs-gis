@@ -49,18 +49,18 @@ export class LoggerController {
         return this.service.repo.save(this.service.repo.create(dto));
     }
 
-    // @Get('export/xlsx')
-    // @UseInterceptors(CrudRequestInterceptor)
-    // async  exportXlsx(
-    //     @Request() @ParsedRequest() req,
-    //     @Res() res
-    // ) {
-    //     const filename = `logger${new Date().getTime()}.xlsx`;
-    //     res.set({
-    //         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    //         'Content-Disposition': `attachment; filename=${filename}`
-    //     })
-    //     const wb = await this.service.exportXlsx(req);
-    //     wb.write(filename, res);
-    // }
+    @Get('export/xlsx')
+    @UseInterceptors(CrudRequestInterceptor)
+    async  exportXlsx(
+        @Request() @ParsedRequest() req,
+        @Res() res
+    ) {
+        const filename = `logger${new Date().getTime()}.xlsx`;
+        res.set({
+            'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition': `attachment; filename=${filename}`
+        })
+        const wb = await this.service.exportXlsx(req);
+        wb.xlsx.write(res);
+    }
 }
