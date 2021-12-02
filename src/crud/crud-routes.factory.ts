@@ -1,16 +1,12 @@
-import { RequestMapping, RequestMethod, UseInterceptors } from '@nestjs/common';
+import { RequestMapping, RequestMethod } from '@nestjs/common';
 import {
   CUSTOM_ROUTE_AGRS_METADATA,
   INTERCEPTORS_METADATA,
-  METHOD_METADATA,
   PARAMTYPES_METADATA,
-  PATH_METADATA,
   ROUTE_ARGS_METADATA,
 } from '@nestjs/common/constants';
 import { RouteParamtypes } from '@nestjs/common/enums/route-paramtypes.enum';
 import {
-  CrudOptions,
-  CrudRequestInterceptor,
   CrudResponseInterceptor,
   MergedCrudOptions,
 } from '@nestjsx/crud';
@@ -19,17 +15,16 @@ import {
   CRUD_OPTIONS_METADATA,
   PARSED_CRUD_REQUEST_KEY,
 } from '@nestjsx/crud/lib/constants';
-import { BaseEntity, getRepository } from 'typeorm';
 import { GISCrudRequestInterceptor } from './gis-crud-request.interceptor';
-
+import * as geojson2shp from 'geojson2shp'
+import { GISCrudRequest } from 'src';
+import { Response } from 'express';
 export class GISCrudRoutesFactory {
   private options: MergedCrudOptions;
   constructor(private target) {}
   create() {
     this.options = Reflect.getMetadata(CRUD_OPTIONS_METADATA, this.target);
-    this.getManyBasePost();
-    this.executeSqlBase();
-
+    this.registerMethod();
     this.setRouteArgs();
     this.setRouteArgsTypes();
     this.setInterceptors();
@@ -42,34 +37,56 @@ export class GISCrudRoutesFactory {
       [`${PARSED_CRUD_REQUEST_KEY}${CUSTOM_ROUTE_AGRS_METADATA}:${0}`]: {
         index: 0,
         factory: (_, ctx) => {
-          return (ctx.switchToHttp
-            ? ctx.switchToHttp().getRequest()
-            : ctx)[PARSED_CRUD_REQUEST_KEY];
+          return (ctx.switchToHttp ? ctx.switchToHttp().getRequest() : ctx)[
+            PARSED_CRUD_REQUEST_KEY
+          ];
         },
         data: undefined,
         pipes: [],
       },
     };
 
-    Reflect.defineMetadata(
-      ROUTE_ARGS_METADATA,
-      { ...requestArg },
-      this.target,
-      'getManyBasePost',
-    );
+    
+
+      Reflect.defineMetadata(
+        ROUTE_ARGS_METADATA,
+        { ...requestArg },
+        this.target,
+        'getManyBasePost',
+      )
+      Reflect.defineMetadata(
+        ROUTE_ARGS_METADATA,
+        { ...requestArg,
+      ...{
+          [`${RouteParamtypes.RESPONSE}:${1}`]: {
+            index: 1,
+            data: undefined,
+            pipes: [],
+          },
+          [`${RouteParamtypes.QUERY}:${2}`]: {
+            index: 2,
+            data: undefined,
+            pipes: [],
+          },
+        }
+        },
+        this.target,
+        'exportShpManyBase',
+      )
+   
 
     Reflect.defineMetadata(
       ROUTE_ARGS_METADATA,
       {
         [`${RouteParamtypes.BODY}:${0}`]: {
-          index:0,
-          pipes:[],
-          data:undefined,
+          index: 0,
+          pipes: [],
+          data: undefined,
         },
       },
       this.target,
-      'executeSqlBase'
-    )
+      'executeSqlBase',
+    );
   }
 
   private setRouteArgsTypes() {
@@ -82,15 +99,22 @@ export class GISCrudRoutesFactory {
   }
 
   private setInterceptors() {
-    ['getManyBase', 'getManyBasePost', 'getOneBase', 'createOneBase','updateOneBase','replaceOneBase','createManyBase'].forEach(
-      route => {
-        Reflect.defineMetadata(
-          INTERCEPTORS_METADATA,
-          [GISCrudRequestInterceptor, CrudResponseInterceptor],
-          this.target.prototype[route],
-        );
-      },
-    );
+    [
+      'getManyBase',
+      'getManyBasePost',
+      'getOneBase',
+      'createOneBase',
+      'updateOneBase',
+      'replaceOneBase',
+      'createManyBase',
+      'exportShpManyBase'
+    ].forEach(route => {
+      Reflect.defineMetadata(
+        INTERCEPTORS_METADATA,
+        [GISCrudRequestInterceptor, CrudResponseInterceptor],
+        this.target.prototype[route],
+      );
+    });
   }
 
   private setAction() {
@@ -101,15 +125,30 @@ export class GISCrudRoutesFactory {
     );
   }
 
-  private getManyBasePost() {
-    this.target.prototype.getManyBasePost = function getManyBasePost(req) {
+  private registerMethod() {
+    this.target.prototype.getManyBasePost = function(req) {
       return this.service.getMany(req);
     };
-  }
-
-  private executeSqlBase() {
-    this.target.prototype.executeSqlBase = function executeSqlBase(body) {
-      return this.service.executeSql({query:body.query});
+    this.target.prototype.exportShpManyBase = async function(req:GISCrudRequest,res:Response,query) {
+      req.parsed.fGeo='geojson';
+      const entities = await this.service.getMany(req);
+      const geojson = entities.map(entity=>{
+        const properties = {...entity};
+        delete properties.shape;
+        const geometry = entity.shape;
+        return {
+          type:'Feature',
+          properties,
+          geometry
+        }
+      })
+      res.setHeader('Content-Disposition', 'attachment; filename=' + query.filename+'.zip');
+            res.setHeader('Content-Transfer-Encoding', 'binary');
+            res.setHeader('Content-Type', 'application/zip');
+      geojson2shp.convert(geojson,res);
+    };
+    this.target.prototype.executeSqlBase = function(body) {
+      return this.service.executeSql({ query: body.query });
     };
   }
 
@@ -123,6 +162,11 @@ export class GISCrudRoutesFactory {
       this.target.prototype,
       null,
       { value: this.target.prototype.executeSqlBase },
+    );
+    RequestMapping({ method: RequestMethod.GET, path: '/exportshp' })(
+      this.target.prototype,
+      null,
+      { value: this.target.prototype.exportShpManyBase },
     );
 
     const primaryParams = Object.keys(this.options.params).filter(

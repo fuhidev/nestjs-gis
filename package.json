@@ -1,6 +1,6 @@
 {
   "name": "nestjs-gis",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "NestJS npm package starter",
   "author": "John Biundo <johnfbiundo@gmail.com>",
   "license": "MIT",
@@ -40,7 +40,6 @@
     "@nestjsx/crud-typeorm": ">=4.6.0",
     "geojson": "^0.5.0",
     "reflect-metadata": "^0.1.13",
-    "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "terraformer-arcgis-parser": "^1.1.0",
     "terraformer-wkt-parser": "^1.2.1",
@@ -50,7 +49,12 @@
     "exceljs": "^4.3.0"
   },
   "dependencies": {
-    "exceljs": "^4.3.0"
+    "bcrypt": ">=4.0.0",
+    "geojson": "^0.5.0",
+    "geojson2shp": "^0.4.0",
+    "shp2json": "^1.4.0",
+    "terraformer-arcgis-parser": "^1.1.0",
+    "terraformer-wkt-parser": "^1.2.1"
   },
   "devDependencies": {
     "@nestjs/common": "^7.6.0",
@@ -69,6 +73,7 @@
     "bcrypt": "^5.0.1",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
+    "exceljs": "^4.3.0",
     "geojson": "^0.5.0",
     "jest": "24.7.1",
     "mssql": "^7.2.1",
