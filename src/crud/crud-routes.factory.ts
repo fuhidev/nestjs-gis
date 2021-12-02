@@ -28,6 +28,7 @@ export class GISCrudRoutesFactory {
   create() {
     this.options = Reflect.getMetadata(CRUD_OPTIONS_METADATA, this.target);
     this.getManyBasePost();
+    this.executeSqlBase();
 
     this.setRouteArgs();
     this.setRouteArgsTypes();
@@ -56,6 +57,19 @@ export class GISCrudRoutesFactory {
       this.target,
       'getManyBasePost',
     );
+
+    Reflect.defineMetadata(
+      ROUTE_ARGS_METADATA,
+      {
+        [`${RouteParamtypes.BODY}:${0}`]: {
+          index:0,
+          pipes:[],
+          data:undefined,
+        },
+      },
+      this.target,
+      'executeSqlBase'
+    )
   }
 
   private setRouteArgsTypes() {
@@ -93,11 +107,22 @@ export class GISCrudRoutesFactory {
     };
   }
 
+  private executeSqlBase() {
+    this.target.prototype.executeSqlBase = function executeSqlBase(body) {
+      return this.service.executeSql({query:body.query});
+    };
+  }
+
   private setRoutePath() {
     RequestMapping({ method: RequestMethod.POST, path: '/query' })(
       this.target.prototype,
       null,
       { value: this.target.prototype.getManyBasePost },
+    );
+    RequestMapping({ method: RequestMethod.POST, path: '/execute' })(
+      this.target.prototype,
+      null,
+      { value: this.target.prototype.executeSqlBase },
     );
 
     const primaryParams = Object.keys(this.options.params).filter(

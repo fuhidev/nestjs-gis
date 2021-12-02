@@ -19,10 +19,9 @@ import { GeometryTypeEnum } from '../arcgis/interfaces/arcgis-geometry.interface
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { ProjectGeometryService } from '../project-geometry/project-geometry.service';
 import { moduleOptions } from '../token';
+import { BadRequestException } from '@nestjs/common';
 
-export class GISTypeOrmCrudService<
-  T
-> extends BaseTypeOrmCrudService<T> {
+export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
   protected geometryService = new ProjectGeometryService();
   constructor(repo: Repository<T>) {
     super(repo);
@@ -202,7 +201,10 @@ export class GISTypeOrmCrudService<
         shape = arcgis.convert(shape);
       }
       // đổi hệ tọa độ
-      if (moduleOptions.srs && moduleOptions.srs.wkt !== shape.spatialReference.wkt) {
+      if (
+        moduleOptions.srs &&
+        moduleOptions.srs.wkt !== shape.spatialReference.wkt
+      ) {
         const { geometries } = await this.geometryService.project({
           inSR: shape.spatialReference,
           outSR: moduleOptions.srs,
@@ -343,5 +345,17 @@ export class GISTypeOrmCrudService<
           column.type,
         ) !== -1,
     );
+  }
+
+  async executeSql(params: { query: string }) {
+    if (!params.query.length) {
+      throw new BadRequestException('Không xác định được lệnh');
+    }
+    try {
+      const query = `UPDATE ${this.repo.metadata.tableName} ${params.query}`;
+      await this.repo.query(query);
+    } catch (error) {
+      throw new BadRequestException(error.driverError.originalError.message);
+    }
   }
 }
