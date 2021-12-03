@@ -6,7 +6,6 @@ import { ArcgisProxyModule, GeometryModule,systemEntities,SystemManagerModule } 
 import { CayXanhModule } from './cay-xanh/cay-xanh.module';
 import { CayXanhEntity } from './cay-xanh/cay-xanh.entity';
 import { TaiNguyenBienModule } from '@tai-nguyen-bien/tai-nguyen-bien.module';
-
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -22,7 +21,7 @@ import { TaiNguyenBienModule } from '@tai-nguyen-bien/tai-nguyen-bien.module';
       logging: false,
       entities: ["dist/**/*.entity{.ts,.js}",...systemEntities],
     }),
-    // TaiNguyenBienModule,
+    TaiNguyenBienModule,
     GeometryModule.forRoot({
       srs: {
         wkt: `PROJCS["TPHCM_VN2000",GEOGCS["GCS_VN_2000",DATUM["D_Vietnam_2000",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",105.75],PARAMETER["Scale_Factor",0.9999],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]`,

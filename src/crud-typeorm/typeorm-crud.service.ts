@@ -157,7 +157,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     for (const d of data) {
       geometries.push(d[geoColumn.propertyName]);
     }
-    if (outSR) {
+    if (!this.equalSrs(outSR,moduleOptions.srs)) {
       const pGeometries = (await this.geometryService.project({
         outSR: outSR,
         geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
@@ -201,12 +201,9 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         shape = arcgis.convert(shape);
       }
       // đổi hệ tọa độ
-      if (
-        moduleOptions.srs &&
-        moduleOptions.srs.wkt !== shape.spatialReference.wkt
-      ) {
+      if (!this.equalSrs(req.parsed.inSR, moduleOptions.srs)) {
         const { geometries } = await this.geometryService.project({
-          inSR: shape.spatialReference,
+          inSR: req.parsed.inSR,
           outSR: moduleOptions.srs,
           geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
           geometries: [shape],
@@ -235,32 +232,42 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
 
     const result = await super.createOne(req, dto);
-    if (req.parsed.fGeo === 'geojson') {
+    if (!this.equalSrs(req.parsed.outSR,moduleOptions.srs)) {
       if (result[geoColumn.propertyName]) {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
-          outSR: 4326,
+          outSR: req.parsed.outSR,
           geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
           geometries: [result[geoColumn.propertyName]],
         });
         if (geometries.length) {
-          result[geoColumn.propertyName] = arcgis.parse(geometries[0]);
+          result[geoColumn.propertyName] = geometries[0];
         }
       }
+    }
+
+    if (req.parsed.fGeo === 'geojson') {
+      result[geoColumn.propertyName] = arcgis.parse(
+        result[geoColumn.propertyName],
+      );
     }
     return result;
   }
   async createMany(req: GISCrudRequest, dto: CreateManyDto<DeepPartial<T>>) {
     const geoColumn = this.getGeometryColumn();
-    if (req.parsed.fGeo === 'geojson') {
+    let hasGeoData = dto.bulk.length && dto.bulk[0][geoColumn.propertyName];
+    if(hasGeoData)
+   { if (req.parsed.fGeo === 'geojson') {
       dto.bulk.forEach(d => {
-        d['shape'] = arcgis.parse(d['shape']);
+        d[geoColumn.propertyName] = arcgis.convert(d[geoColumn.propertyName]);
       });
+    }
 
-      const inSR = dto.bulk[0]['shape'].spatialReference;
+    // neu khac he toa do thi chuyen he toa do
+    if (!this.equalSrs(req.parsed.inSR, moduleOptions.srs)) {
       // đổi hệ tọa độ
       const { geometries } = await this.geometryService.project({
-        inSR,
+        inSR: req.parsed.inSR,
         outSR: moduleOptions.srs,
         geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
         geometries: dto.bulk.map(m => m['shape']) as arcgis.Geometry[],
@@ -280,23 +287,35 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         take: 1,
       });
       const objectId = lastEntity ? (lastEntity as any).objectId + 1 : 1;
-      (dto as any).objectId = objectId;
+      dto.bulk.forEach((d:any,idx)=>{
+        d['objectId'] = objectId+idx
+      })
     }
-
+}
     const result = await super.createMany(req, dto);
-    if (req.parsed.fGeo === 'geojson') {
-      if (result[geoColumn.propertyName]) {
+    if(hasGeoData)
+    {const data: T[] = this.decidePagination(req.parsed, req.options)
+      ? (result as any).data
+      : result;
+      if (!this.equalSrs(req.parsed.outSR,moduleOptions.srs))  {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
-          outSR: 4326,
+          outSR: req.parsed.outSR,
           geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
-          geometries: [result[geoColumn.propertyName]],
+          geometries: data.map(d => d[geoColumn.propertyName]),
         });
         if (geometries.length) {
-          result[geoColumn.propertyName] = arcgis.parse(geometries[0]);
+          geometries.forEach((geo, idx) => {
+            data[idx][geoColumn.propertyName] = geo;
+          });
         }
-      }
     }
+
+    if (req.parsed.fGeo === 'geojson') {
+      data.forEach(d => {
+        d[geoColumn.propertyName] = arcgis.parse(d[geoColumn.propertyName]);
+      });
+    }}
     return result;
   }
 
@@ -308,32 +327,40 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         shape = arcgis.convert(shape);
       }
       // đổi hệ tọa độ
-      const { geometries } = await this.geometryService.project({
-        inSR: shape.spatialReference,
-        outSR: moduleOptions.srs,
-        geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
-        geometries: [shape],
-      });
-      if (geometries.length) {
-        dto[geoColumn.propertyName] = geometries[0];
-      } else {
-        throw new Error('Không thể chuyển hệ tọa độ, vui lòng thử lại');
+      if (!this.equalSrs(req.parsed.outSR,moduleOptions.srs))  {
+        const { geometries } = await this.geometryService.project({
+          inSR: shape.spatialReference,
+          outSR: moduleOptions.srs,
+          geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
+          geometries: [shape],
+        });
+        if (geometries.length) {
+          dto[geoColumn.propertyName] = geometries[0];
+        } else {
+          throw new Error('Không thể chuyển hệ tọa độ, vui lòng thử lại');
+        }
       }
     }
 
     const result = await super.updateOne(req, dto);
-    if (req.parsed.fGeo === 'geojson') {
+    if (!this.equalSrs(req.parsed.outSR,moduleOptions.srs)) {
       if (result[geoColumn.propertyName]) {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
-          outSR: 4326,
+          outSR: req.parsed.outSR,
           geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
           geometries: [result[geoColumn.propertyName]],
         });
         if (geometries.length) {
-          result[geoColumn.propertyName] = arcgis.parse(geometries[0]);
+          result[geoColumn.propertyName] = geometries[0];
         }
       }
+    }
+
+    if (req.parsed.fGeo === 'geojson') {
+      result[geoColumn.propertyName] = arcgis.parse(
+        result[geoColumn.propertyName],
+      );
     }
     return result;
   }
@@ -357,5 +384,31 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     } catch (error) {
       throw new BadRequestException(error.driverError.originalError.message);
     }
+  }
+
+  equalSrs(srs1?: number | SpatialReference, srs2?: number | SpatialReference) {
+    if (typeof srs1 === 'number' && typeof srs2 === 'number') {
+      return srs1 === srs2;
+    } else if (typeof srs1 === 'object' && typeof srs2 === 'number') {
+      srs1 = srs1 as SpatialReference;
+      if (srs2 === srs1.wkid) {
+        return true;
+      }
+    } else if (typeof srs2 === 'object' && typeof srs1 === 'number') {
+      srs2 = srs2 as SpatialReference;
+      if (srs1 === srs2.wkid) {
+        return true;
+      }
+    } else if (typeof srs1 === 'object' && typeof srs2 === 'object') {
+      srs1 = srs1 as SpatialReference;
+      srs2 = srs2 as SpatialReference;
+      if (srs1.wkid === srs2.wkid) {
+        return true;
+      }
+      if (srs1.wkt === srs2.wkt) {
+        return true;
+      }
+    }
+    return false;
   }
 }

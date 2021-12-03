@@ -15,6 +15,7 @@ export interface GISParsedRequestParams extends ParsedRequestParams {
   bbox?: Envelope;
   filterGeo?: FilterGeoBody;
   fGeo?: 'geojson' | 'esri';
+  inSR?:SpatialReference  | number;
 }
 
 export interface GISCrudRequest extends CrudRequest {
