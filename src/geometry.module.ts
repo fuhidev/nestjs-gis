@@ -4,11 +4,13 @@ import { PlacesModule } from './places/places.module';
 import { ProjectGeometryModule } from './project-geometry/project-geometry.module';
 import { GeometryModuleOptions, setOptions } from './token';
 import { ImportExcelModule } from './import-excel/import-excel.module';
+import { GeometryController } from './geometry.controller';
 
 @Module({
   imports: [ProjectGeometryModule, PlacesModule,ImportExcelModule],
   providers: [GeometryService],
   exports: [GeometryService],
+  controllers:[GeometryController]
 })
 export class GeometryModule {
   static forRoot(options: GeometryModuleOptions): DynamicModule {

@@ -10,4 +10,10 @@ export class GeometryService {
   project(params: ProjectGeometryParams){
     return this.projectGeometry.project(params);
   }
+
+  shpToGeojson(params:{
+    file
+  }){
+  
+  }
 }
