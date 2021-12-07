@@ -185,6 +185,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
 
   async getOne(crud: GISCrudRequest) {
     const result = await super.getOne(crud);
+    if (
+      crud.parsed.fields.length === 0 ||
+      crud.parsed.fields.indexOf(this.getGeometryColumn().propertyName) > -1
+    )
     await this.convertGeometryToArcgis(
       [result],
       crud.parsed.outSR,
