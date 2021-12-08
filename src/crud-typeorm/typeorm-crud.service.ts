@@ -4,6 +4,7 @@ import * as wkt from 'terraformer-wkt-parser';
 import { SelectQueryBuilder, Repository, DeepPartial } from 'typeorm';
 import {
   CreateManyDto,
+  CrudRequest,
   CrudRequestOptions,
   GetManyDefaultResponse,
 } from '@nestjsx/crud';
@@ -20,6 +21,7 @@ import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { ProjectGeometryService } from '../project-geometry/project-geometry.service';
 import { moduleOptions } from '../token';
 import { BadRequestException } from '@nestjs/common';
+import { CreateBuilderInterceptor } from '../interceptors/create-builder.interceptor';
 
 export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
   protected geometryService = new ProjectGeometryService();
@@ -46,6 +48,23 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     if (parsed.bbox) {
       await this.setAndWhereBBox(builder, parsed.bbox);
     }
+
+    // if (moduleOptions.interceptors) {
+    //   for (const interceptor of moduleOptions.interceptors) {
+    //     if (interceptor instanceof CreateBuilderInterceptor) {
+    //       await interceptor.intercept(this, builder, parsed, options, many);
+    //     }
+    //   }
+    // }
+
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(
+        this,
+        'createBuilder',
+        arguments,
+      );
+    }
+
     return builder;
   }
 
@@ -83,6 +102,13 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       if (builder.getSql().search('WHERE') === -1) builder.where(where);
       else builder.andWhere(where);
     }
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(
+        this,
+        'setAndWhereFilterGeo',
+        arguments,
+      );
+    }
     return builder;
   }
 
@@ -106,6 +132,13 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       }.STIntersects('${wktGeo}') = 1`;
       if (builder.getSql().search('WHERE') === -1) builder.where(where);
       else builder.andWhere(where);
+    }
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(
+        this,
+        'setAndWhereBBox',
+        arguments,
+      );
     }
     return builder;
   }
@@ -139,6 +172,9 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       query.fields.indexOf(this.getGeometryColumn().propertyName) > -1
     )
       await this.convertGeometryToArcgis(data, query.outSR, query.fGeo);
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(this, 'doGetMany', arguments);
+    }
     return result;
   }
 
@@ -157,7 +193,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     for (const d of data) {
       geometries.push(d[geoColumn.propertyName]);
     }
-    if (!this.equalSrs(outSR,moduleOptions.srs)) {
+    if (!this.equalSrs(outSR, moduleOptions.srs)) {
       const pGeometries = (await this.geometryService.project({
         outSR: outSR,
         geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
@@ -181,6 +217,15 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         }
       }
     }
+
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(
+        this,
+        'convertGeometryToArcgis',
+        arguments,
+      );
+    }
+
   }
 
   async getOne(crud: GISCrudRequest) {
@@ -189,11 +234,19 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       crud.parsed.fields.length === 0 ||
       crud.parsed.fields.indexOf(this.getGeometryColumn().propertyName) > -1
     )
-    await this.convertGeometryToArcgis(
-      [result],
-      crud.parsed.outSR,
-      crud.parsed.fGeo,
-    );
+      await this.convertGeometryToArcgis(
+        [result],
+        crud.parsed.outSR,
+        crud.parsed.fGeo,
+      );
+
+      if (moduleOptions.hook && moduleOptions.hook.crudService) {
+        await moduleOptions.hook.crudService.call(
+          this,
+          'getOne',
+          [result,...arguments],
+        );
+      }
     return result;
   }
 
@@ -236,7 +289,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
 
     const result = await super.createOne(req, dto);
-    if (!this.equalSrs(req.parsed.outSR,moduleOptions.srs)) {
+    if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
       if (result[geoColumn.propertyName]) {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
@@ -255,53 +308,60 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         result[geoColumn.propertyName],
       );
     }
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(
+        this,
+        'createOne',
+        [result,...arguments],
+      );
+    }
     return result;
   }
   async createMany(req: GISCrudRequest, dto: CreateManyDto<DeepPartial<T>>) {
     const geoColumn = this.getGeometryColumn();
     let hasGeoData = dto.bulk.length && dto.bulk[0][geoColumn.propertyName];
-    if(hasGeoData)
-   { if (req.parsed.fGeo === 'geojson') {
-      dto.bulk.forEach(d => {
-        d[geoColumn.propertyName] = arcgis.convert(d[geoColumn.propertyName]);
-      });
-    }
+    if (hasGeoData) {
+      if (req.parsed.fGeo === 'geojson') {
+        dto.bulk.forEach(d => {
+          d[geoColumn.propertyName] = arcgis.convert(d[geoColumn.propertyName]);
+        });
+      }
 
-    // neu khac he toa do thi chuyen he toa do
-    if (!this.equalSrs(req.parsed.inSR, moduleOptions.srs)) {
-      // đổi hệ tọa độ
-      const { geometries } = await this.geometryService.project({
-        inSR: req.parsed.inSR,
-        outSR: moduleOptions.srs,
-        geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
-        geometries: dto.bulk.map(m => m['shape']) as arcgis.Geometry[],
-      });
-      geometries.forEach((geo, idx) => (dto.bulk[idx]['shape'] = geo));
-    }
+      // neu khac he toa do thi chuyen he toa do
+      if (!this.equalSrs(req.parsed.inSR, moduleOptions.srs)) {
+        // đổi hệ tọa độ
+        const { geometries } = await this.geometryService.project({
+          inSR: req.parsed.inSR,
+          outSR: moduleOptions.srs,
+          geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
+          geometries: dto.bulk.map(m => m['shape']) as arcgis.Geometry[],
+        });
+        geometries.forEach((geo, idx) => (dto.bulk[idx]['shape'] = geo));
+      }
 
-    if (
-      this.repo.metadata.columns.some(
-        f => f.databaseName.toLowerCase() === 'objectid',
-      )
-    ) {
-      const [lastEntity] = await this.repo.find({
-        order: {
-          objectId: 'DESC',
-        } as any,
-        take: 1,
-      });
-      const objectId = lastEntity ? (lastEntity as any).objectId + 1 : 1;
-      dto.bulk.forEach((d:any,idx)=>{
-        d['objectId'] = objectId+idx
-      })
+      if (
+        this.repo.metadata.columns.some(
+          f => f.databaseName.toLowerCase() === 'objectid',
+        )
+      ) {
+        const [lastEntity] = await this.repo.find({
+          order: {
+            objectId: 'DESC',
+          } as any,
+          take: 1,
+        });
+        const objectId = lastEntity ? (lastEntity as any).objectId + 1 : 1;
+        dto.bulk.forEach((d: any, idx) => {
+          d['objectId'] = objectId + idx;
+        });
+      }
     }
-}
     const result = await super.createMany(req, dto);
-    if(hasGeoData)
-    {const data: T[] = this.decidePagination(req.parsed, req.options)
-      ? (result as any).data
-      : result;
-      if (!this.equalSrs(req.parsed.outSR,moduleOptions.srs))  {
+    if (hasGeoData) {
+      const data: T[] = this.decidePagination(req.parsed, req.options)
+        ? (result as any).data
+        : result;
+      if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
           outSR: req.parsed.outSR,
@@ -313,13 +373,21 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
             data[idx][geoColumn.propertyName] = geo;
           });
         }
-    }
+      }
 
-    if (req.parsed.fGeo === 'geojson') {
-      data.forEach(d => {
-        d[geoColumn.propertyName] = arcgis.parse(d[geoColumn.propertyName]);
-      });
-    }}
+      if (req.parsed.fGeo === 'geojson') {
+        data.forEach(d => {
+          d[geoColumn.propertyName] = arcgis.parse(d[geoColumn.propertyName]);
+        });
+      }
+    }
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(
+        this,
+        'createMany',
+        [result,...arguments],
+      );
+    }
     return result;
   }
 
@@ -331,7 +399,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         shape = arcgis.convert(shape);
       }
       // đổi hệ tọa độ
-      if (!this.equalSrs(req.parsed.outSR,moduleOptions.srs))  {
+      if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
         const { geometries } = await this.geometryService.project({
           inSR: shape.spatialReference,
           outSR: moduleOptions.srs,
@@ -347,7 +415,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
 
     const result = await super.updateOne(req, dto);
-    if (!this.equalSrs(req.parsed.outSR,moduleOptions.srs)) {
+    if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
       if (result[geoColumn.propertyName]) {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
@@ -364,6 +432,13 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     if (req.parsed.fGeo === 'geojson') {
       result[geoColumn.propertyName] = arcgis.parse(
         result[geoColumn.propertyName],
+      );
+    }
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(
+        this,
+        'updateOne',
+        [result,...arguments],
       );
     }
     return result;
@@ -384,6 +459,13 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
     try {
       const query = `UPDATE ${this.repo.metadata.tableName} ${params.query}`;
+      if (moduleOptions.hook && moduleOptions.hook.crudService) {
+        await moduleOptions.hook.crudService.call(
+          this,
+          'executeQuery',
+          [query,...arguments],
+        );
+      }
       await this.repo.query(query);
     } catch (error) {
       throw new BadRequestException(error.driverError.originalError.message);
@@ -414,5 +496,20 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       }
     }
     return false;
+  }
+
+  async getCount(req: GISCrudRequest) {
+    const builder = await this.createBuilder(req.parsed, req.options);
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(
+        this,
+        'getCount',
+        [builder,...arguments],
+      );
+    }
+    const count = await builder.getCount();
+    return {
+      count,
+    };
   }
 }

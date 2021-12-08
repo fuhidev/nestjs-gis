@@ -6,17 +6,14 @@ import {
   ROUTE_ARGS_METADATA,
 } from '@nestjs/common/constants';
 import { RouteParamtypes } from '@nestjs/common/enums/route-paramtypes.enum';
-import {
-  CrudResponseInterceptor,
-  MergedCrudOptions,
-} from '@nestjsx/crud';
+import { CrudResponseInterceptor, MergedCrudOptions } from '@nestjsx/crud';
 import {
   ACTION_NAME_METADATA,
   CRUD_OPTIONS_METADATA,
   PARSED_CRUD_REQUEST_KEY,
 } from '@nestjsx/crud/lib/constants';
 import { GISCrudRequestInterceptor } from './gis-crud-request.interceptor';
-import * as geojson2shp from 'geojson2shp'
+import * as geojson2shp from 'geojson2shp';
 import { GISCrudRequest } from 'src';
 import { Response } from 'express';
 export class GISCrudRoutesFactory {
@@ -46,18 +43,23 @@ export class GISCrudRoutesFactory {
       },
     };
 
-    
-
-      Reflect.defineMetadata(
-        ROUTE_ARGS_METADATA,
-        { ...requestArg },
-        this.target,
-        'getManyBasePost',
-      )
-      Reflect.defineMetadata(
-        ROUTE_ARGS_METADATA,
-        { ...requestArg,
-      ...{
+    Reflect.defineMetadata(
+      ROUTE_ARGS_METADATA,
+      { ...requestArg },
+      this.target,
+      'getCountBase',
+    );
+    Reflect.defineMetadata(
+      ROUTE_ARGS_METADATA,
+      { ...requestArg },
+      this.target,
+      'getManyBasePost',
+    );
+    Reflect.defineMetadata(
+      ROUTE_ARGS_METADATA,
+      {
+        ...requestArg,
+        ...{
           [`${RouteParamtypes.RESPONSE}:${1}`]: {
             index: 1,
             data: undefined,
@@ -68,12 +70,11 @@ export class GISCrudRoutesFactory {
             data: undefined,
             pipes: [],
           },
-        }
         },
-        this.target,
-        'exportShpManyBase',
-      )
-   
+      },
+      this.target,
+      'exportShpManyBase',
+    );
 
     Reflect.defineMetadata(
       ROUTE_ARGS_METADATA,
@@ -107,7 +108,8 @@ export class GISCrudRoutesFactory {
       'updateOneBase',
       'replaceOneBase',
       'createManyBase',
-      'exportShpManyBase'
+      'exportShpManyBase',
+      'getCountBase'
     ].forEach(route => {
       Reflect.defineMetadata(
         INTERCEPTORS_METADATA,
@@ -129,23 +131,33 @@ export class GISCrudRoutesFactory {
     this.target.prototype.getManyBasePost = function(req) {
       return this.service.getMany(req);
     };
-    this.target.prototype.exportShpManyBase = async function(req:GISCrudRequest,res:Response,query) {
-      req.parsed.fGeo='geojson';
+    this.target.prototype.getCountBase = function(req) {
+      return this.service.getCount(req);
+    };
+    this.target.prototype.exportShpManyBase = async function(
+      req: GISCrudRequest,
+      res: Response,
+      query,
+    ) {
+      req.parsed.fGeo = 'geojson';
       const entities = await this.service.getMany(req);
-      const geojson = entities.map(entity=>{
-        const properties = {...entity};
+      const geojson = entities.map(entity => {
+        const properties = { ...entity };
         delete properties.shape;
         const geometry = entity.shape;
         return {
-          type:'Feature',
+          type: 'Feature',
           properties,
-          geometry
-        }
-      })
-      res.setHeader('Content-Disposition', 'attachment; filename=' + query.filename+'.zip');
-            res.setHeader('Content-Transfer-Encoding', 'binary');
-            res.setHeader('Content-Type', 'application/zip');
-      geojson2shp.convert(geojson,res);
+          geometry,
+        };
+      });
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename=' + query.filename + '.zip',
+      );
+      res.setHeader('Content-Transfer-Encoding', 'binary');
+      res.setHeader('Content-Type', 'application/zip');
+      geojson2shp.convert(geojson, res);
     };
     this.target.prototype.executeSqlBase = function(body) {
       return this.service.executeSql({ query: body.query });
@@ -167,6 +179,11 @@ export class GISCrudRoutesFactory {
       this.target.prototype,
       null,
       { value: this.target.prototype.exportShpManyBase },
+    );
+    RequestMapping({ method: RequestMethod.GET, path: '/count' })(
+      this.target.prototype,
+      null,
+      { value: this.target.prototype.getCountBase },
     );
 
     const primaryParams = Object.keys(this.options.params).filter(
