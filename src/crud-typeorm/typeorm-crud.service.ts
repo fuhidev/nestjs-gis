@@ -61,7 +61,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       await moduleOptions.hook.crudService.call(
         this,
         'createBuilder',
-        arguments,
+        [builder,...arguments],
       );
     }
 
