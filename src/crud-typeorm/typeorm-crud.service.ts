@@ -444,7 +444,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     return result;
   }
 
-  private getGeometryColumn(): ColumnMetadata {
+  getGeometryColumn(): ColumnMetadata {
     return this.repo.metadata.columns.find(
       column =>
         this.repo.metadata.connection.driver.spatialTypes.indexOf(
