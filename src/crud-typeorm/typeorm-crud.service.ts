@@ -68,9 +68,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     return builder;
   }
 
-  private async setAndWhereFilterGeo(
+  protected async setAndWhereFilterGeo(
     builder: SelectQueryBuilder<T>,
     filterGeo: FilterGeoBody,
+    pAlias = this.alias
   ) {
     const geoColumn = this.getGeometryColumn();
     let geoFilter: arcgis.Geometry;
@@ -98,7 +99,8 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     geoFilter = geometries[0];
     let wktGeo = wkt.convert(arcgis.parse(geoFilter));
     if (wktGeo) {
-      const where = `${geoColumn.propertyName}.STIntersects('${wktGeo}') = 1`;
+      const alias = pAlias ? pAlias + '.' : '';
+      const where = `${alias}${geoColumn.propertyName}.STIntersects('${wktGeo}') = 1`;
       if (builder.getSql().search('WHERE') === -1) builder.where(where);
       else builder.andWhere(where);
     }
@@ -112,9 +114,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     return builder;
   }
 
-  private async setAndWhereBBox(
+  protected async setAndWhereBBox(
     builder: SelectQueryBuilder<T>,
     bbox: arcgis.Envelope,
+    pAlias = this.alias
   ) {
     const geoColumn = this.getGeometryColumn();
 
@@ -126,7 +129,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     const pGeo = geometries[0] as arcgis.Polygon;
     let wktGeo = wkt.convert(arcgis.parse(pGeo));
     if (wktGeo) {
-      const alias = this.alias ? this.alias + '.' : '';
+      const alias = pAlias ? pAlias + '.' : '';
       const where = `${alias}${
         geoColumn.propertyName
       }.STIntersects('${wktGeo}') = 1`;

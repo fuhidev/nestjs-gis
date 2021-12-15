@@ -1,19 +1,22 @@
-import { Module } from '@nestjs/common';
+import { Controller, Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   ArcgisProxyModule,
   GeometryModule,
+  GISTypeOrmCrudService,
   systemEntities,
   SystemManagerModule,
-  CreateBuilderInterceptor,
 } from 'nestjs-gis';
-import { CayXanhModule } from './cay-xanh/cay-xanh.module';
-import { CayXanhEntity } from './cay-xanh/cay-xanh.entity';
 import { TaiNguyenBienModule } from '@tai-nguyen-bien/tai-nguyen-bien.module';
+import { Entity, getCustomRepository, getRepository, Repository } from 'typeorm';
+import { AutogeModule } from './autoge/autoge.module';
 
-const createbuilderinterceptor = new CreateBuilderInterceptor();
+
+
+
+
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -52,16 +55,17 @@ const createbuilderinterceptor = new CreateBuilderInterceptor();
         password: 'backendproxy@123',
       },
     }),
-    ArcgisProxyModule.forRoot({
-      arcUrl: 'http://ditagis.com/arcgis',
-      route: 'ditagis',
-    }),
+    // ArcgisProxyModule.forRoot({
+    //   arcUrl: 'http://ditagis.com/arcgis',
+    //   route: 'ditagis',
+    // }),
     SystemManagerModule.forRoot({
       connection: 'gis',
       jwt: {
         secret: 'hieu ',
       },
     }),
+    // AutogeModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

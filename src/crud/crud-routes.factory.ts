@@ -3,6 +3,7 @@ import {
   CUSTOM_ROUTE_AGRS_METADATA,
   INTERCEPTORS_METADATA,
   PARAMTYPES_METADATA,
+  PATH_METADATA,
   ROUTE_ARGS_METADATA,
 } from '@nestjs/common/constants';
 import { RouteParamtypes } from '@nestjs/common/enums/route-paramtypes.enum';
@@ -109,7 +110,7 @@ export class GISCrudRoutesFactory {
       'replaceOneBase',
       'createManyBase',
       'exportShpManyBase',
-      'getCountBase'
+      'getCountBase',
     ].forEach(route => {
       Reflect.defineMetadata(
         INTERCEPTORS_METADATA,
@@ -175,6 +176,19 @@ export class GISCrudRoutesFactory {
       null,
       { value: this.target.prototype.executeSqlBase },
     );
+
+    let getOneBasePath: string;
+
+    const getOneBaseOld = this.target.prototype.getOneBase;
+
+    if (this.target.prototype.getOneBase) {
+      getOneBasePath = Reflect.getMetadata(
+        PATH_METADATA,
+        this.target.prototype.getOneBase,
+      );
+      delete this.target.prototype.getOneBase;
+    }
+
     RequestMapping({ method: RequestMethod.GET, path: '/exportshp' })(
       this.target.prototype,
       null,
@@ -186,17 +200,15 @@ export class GISCrudRoutesFactory {
       { value: this.target.prototype.getCountBase },
     );
 
-    const primaryParams = Object.keys(this.options.params).filter(
-      key =>
-        this.options.params[key].primary && !this.options.params[key].disabled,
-    );
-
-    const path = primaryParams.map(param => `/:${param}`).join('');
-
-    RequestMapping({ method: RequestMethod.GET, path })(
-      this.target.prototype,
-      null,
-      { value: this.target.prototype.getOneBase },
-    );
+    if (getOneBasePath) {
+      this.target.prototype.getOneBase = getOneBaseOld;
+      RequestMapping({ method: RequestMethod.GET, path: getOneBasePath })(
+        this.target,
+        null,
+        {
+          value: this.target.prototype.getOneBase,
+        },
+      );
+    }
   }
 }
