@@ -11,3 +11,4 @@ export * from './decorators';
 export * from './typeorm';
 export * from './arcgis-proxy';
 export * from './system-manager';
+export * from './dynamic-rest';

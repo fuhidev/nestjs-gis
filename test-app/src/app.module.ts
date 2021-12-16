@@ -8,10 +8,12 @@ import {
   GISTypeOrmCrudService,
   systemEntities,
   SystemManagerModule,
+  DynamicRestModule,
+  geometryTransformer,
+  GeometryTypeEnum
 } from 'nestjs-gis';
 import { TaiNguyenBienModule } from '@tai-nguyen-bien/tai-nguyen-bien.module';
 import { Entity, getCustomRepository, getRepository, Repository } from 'typeorm';
-import { AutogeModule } from './autoge/autoge.module';
 
 
 
@@ -65,7 +67,59 @@ import { AutogeModule } from './autoge/autoge.module';
     //     secret: 'hieu ',
     //   },
     // }),
-    AutogeModule.forRoot(),
+    DynamicRestModule.forRoot({
+      dbConfig:{
+            options: { encrypt: false },
+            keepConnectionAlive: true,
+            type: 'mssql',
+            host: '171.244.32.245',
+            port: 1433,
+            username: 'sa',
+            password: 'Ditagis123',
+            database: 'NinhThuan_TaiNguyenBien',
+            synchronize: false,
+      },
+      restEntities:
+      [
+          {
+            path: 'rest/di-tich',
+            tableName: 'DITICH',
+            columns: [
+              {
+                propertyName: 'objectId',
+                name: 'OBJECTID',
+                type: 'int',
+                primary: true,
+              },
+              {
+                propertyName: 'shape',
+                name: 'SHAPE',
+                type: 'geometry',
+                spatialFeatureType: GeometryTypeEnum.Point,
+              },
+            ],
+          },
+          {
+            path: 'rest/dam-pha-ven-bien',
+            tableName: 'DAMPHAVENBIEN',
+            columns: [
+              {
+                propertyName: 'objectId',
+                name: 'OBJECTID',
+                type: 'int',
+                primary: true,
+              },
+              {
+                propertyName: 'shape',
+                name: 'SHAPE',
+                type: 'geometry',
+                spatialFeatureType: GeometryTypeEnum.Polygon,
+              },
+            ],
+          },
+        ]
+    })
+
   ],
   controllers: [AppController],
   providers: [AppService],
