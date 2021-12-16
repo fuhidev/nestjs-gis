@@ -1,6 +1,13 @@
-import { Controller, DynamicModule, Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { GISTypeOrmCrudService } from 'nestjs-gis';
+import { Controller, DynamicModule, Injectable, Module } from '@nestjs/common';
+import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm';
+import { Crud } from '@nestjsx/crud';
+import {
+  geometryTransformer,
+  GeometryTypeEnum,
+  GISCrud,
+  GISTypeOrmCrudService,
+  RouteMetadata,
+} from 'nestjs-gis';
 import {
   Column,
   ColumnOptions,
@@ -9,49 +16,164 @@ import {
   getRepository,
   PrimaryColumn,
 } from 'typeorm';
-const controllers = [
+
+var __decorate = function(decorators, target, key?, desc?) {
+  var c = arguments.length,
+    r =
+      c < 3
+        ? target
+        : desc === null
+        ? (desc = Object.getOwnPropertyDescriptor(target, key))
+        : desc,
+    d;
+  if (typeof Reflect === 'object' && typeof Reflect.decorate === 'function')
+    r = Reflect.decorate(decorators, target, key, desc);
+  else
+    for (var i = decorators.length - 1; i >= 0; i--)
+      if ((d = decorators[i]))
+        r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+  return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = function(k, v) {
+  if (typeof Reflect === 'object' && typeof Reflect.metadata === 'function')
+    return Reflect.metadata(k, v);
+};
+var __param = function(paramIndex, decorator) {
+  return function(target, key) {
+    decorator(target, key, paramIndex);
+  };
+};
+const dbName = 'HIEUDEPTRAI';
+const controllers: Array<{
+  path: string;
+  tableName: string;
+  columns: Array<ColumnOptions & { propertyName: string }>;
+}> = [
   {
-    path: 'rest/ong-phan-phoi',
-    tableName: 'ONGPHANPHOI',
+    path: 'rest/di-tich',
+    tableName: 'DITICH',
     columns: [
-      { name: 'objectId', tableName: 'OBJECTID', type: 'int', isPrimary: true },
+      {
+        propertyName: 'objectId',
+        name: 'OBJECTID',
+        type: 'int',
+        primary: true,
+      },
+      {
+        propertyName: 'shape',
+        name: 'SHAPE',
+        transformer: geometryTransformer,
+        type: 'geometry',
+        spatialFeatureType: GeometryTypeEnum.Point,
+      },
+    ],
+  },
+  {
+    path: 'rest/dam-pha-ven-bien',
+    tableName: 'DAMPHAVENBIEN',
+    columns: [
+      {
+        propertyName: 'objectId',
+        name: 'OBJECTID',
+        type: 'int',
+        primary: true,
+      },
+      {
+        propertyName: 'shape',
+        name: 'SHAPE',
+        transformer: geometryTransformer,
+        type: 'geometry',
+        spatialFeatureType: GeometryTypeEnum.Polygon,
+      },
     ],
   },
 ];
+
 @Module({})
 export class AutogeModule {
   static async forRoot(): Promise<DynamicModule> {
     const entities = [];
-    controllers.forEach(controller => {
-      function entity() {
-        for (const col of controller.columns) {
-          this[col.name] = void 0;
+    const modules = [];
+    for (const controller of controllers) {
+      var EntityCls = new Function(
+        'return function ' + controller.tableName + '(){ }',
+      )();
+
+      for (const column of controller.columns) {
+        __decorate(
+          [Column({ ...column }), __metadata('design:type', void 0)],
+          EntityCls.prototype,
+          column.propertyName,
+          void 0,
+        );
+      }
+
+      //@ts-ignore
+      EntityCls = __decorate(
+        [Entity(controller.tableName, { synchronize: false })],
+        EntityCls,
+      );
+      entities.push(EntityCls);
+
+      let Service = class extends GISTypeOrmCrudService<any> {
+        constructor(repo) {
+          super(repo);
         }
-      }
+      };
+      Service = __decorate(
+        [
+          Injectable(),
+          __param(0, InjectRepository(EntityCls, dbName)),
+          __metadata('design:paramtypes', [Object]),
+        ],
+        Service,
+      );
 
-      for (const col of controller.columns) {
-        Column({
-          name: col.tableName,
-          type: col.type,
-          primary: col.isPrimary,
-        } as ColumnOptions)(entity, col.name);
-      }
-      // setTimeout(() => {
-      Entity(controller.tableName)(entity);
-      entities.push(entity);
-      // }, 0);
+      let ControllerCls = class {
+        service;
+        constructor(service) {
+          this.service = service;
+        }
+        ngOnInit() {}
+      };
+      ControllerCls = __decorate(
+        [
+          RouteMetadata(),
+          GISCrud(),
+          Crud({
+            model: { type: EntityCls },
+            params: {
+              objectId: {
+                primary: true,
+                field: 'objectId',
+                type: 'number',
+              },
+            },
+            query: {
+              join: {
+                loaiKhu: {},
+              },
+            },
+          }),
+          Controller(controller.path),
+          __metadata('design:paramtypes', [Service]),
+        ],
+        ControllerCls,
+      );
 
-      //       setTimeout(() => {
-      //         const repo = getRepository(entity);
-      //         console.log(repo);
-      //       }, 5000);
-
-      // const service = new GISTypeOrmCrudService(repo);
-      // function ctr() {
-      //   this.service = service;
-      // }
-      // Controller(controller.path)(ctr);
-    });
+      let DamPhaVenBienModule = class DamPhaVenBienModule {};
+      DamPhaVenBienModule = __decorate(
+        [
+          Module({
+            imports: [TypeOrmModule.forFeature([EntityCls], dbName)],
+            providers: [Service],
+            controllers: [ControllerCls],
+          }),
+        ],
+        DamPhaVenBienModule,
+      );
+      modules.push(DamPhaVenBienModule);
+    }
     return {
       module: AutogeModule,
       imports: [
@@ -65,10 +187,11 @@ export class AutogeModule {
           password: 'Ditagis123',
           database: 'NinhThuan_TaiNguyenBien',
           synchronize: false,
-          name: 'wtff',
+          name: dbName,
           logging: false,
           entities,
         }),
+        ...modules,
       ],
     };
   }
