@@ -107,7 +107,7 @@ export function generateDynamicRest(options: DynamicRestOptions) {
           params: {
             id: {
               primary: true,
-              field: primaryCol.name,
+              field: primaryCol.propertyName,
               type: sqlType2Js(primaryCol.type) as any,
             },
           },
