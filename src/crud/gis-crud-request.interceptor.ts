@@ -7,6 +7,7 @@ import {
 import { CrudRequestInterceptor } from '@nestjsx/crud';
 import { PARSED_CRUD_REQUEST_KEY } from '@nestjsx/crud/lib/constants';
 import { GISCrudRequest } from 'src';
+import { moduleOptions } from '../token';
 
 @Injectable()
 export class GISCrudRequestInterceptor extends CrudRequestInterceptor
@@ -26,9 +27,9 @@ export class GISCrudRequestInterceptor extends CrudRequestInterceptor
       try {
         value.parsed.outSR = request.query.outSR
           ? JSON.parse(request.query.outSR)
-          : 4326;
+          : moduleOptions.srs;
       } catch (error) {
-        value.parsed.outSR = 4326;
+        value.parsed.outSR = moduleOptions.srs;
       }
       try {
         value.parsed.inSR = request.query.inSR
