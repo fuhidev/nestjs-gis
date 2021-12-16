@@ -94,28 +94,38 @@ export class RouteMedataFactory {
       if (columnMeta.relationMetadata) {
         const relationMetadatas = allColumns.filter(
           f =>
-            f.target === columnMeta.relationMetadata.type ||
+            (typeof f.target === 'string' &&
+              typeof columnMeta.relationMetadata.type === 'string' &&
+              f.target === columnMeta.relationMetadata.type) ||
+            (typeof f.target === 'function' &&
+              typeof columnMeta.relationMetadata.type === 'string' &&
+              f.target.name === columnMeta.relationMetadata.type) ||
             (typeof f.target === 'function' &&
               typeof columnMeta.relationMetadata.type === 'function' &&
-              columnMeta.relationMetadata.type.prototype instanceof f.target),
+              (columnMeta.relationMetadata.type.prototype instanceof f.target
+                || f.target === columnMeta.relationMetadata.type
+                )),
         );
-        const primaryColumn = relationMetadatas.find(f => f.options.primary)
-          .propertyName;
+        if(relationMetadatas.length){
+        const primaryColumn = relationMetadatas.find(f => f.options.primary);
+        if(primaryColumn){
         const rmtd = relationMetadatas.find(
           f => (f.options as ColumnOptions).isDisplayColumn,
         );
-        const displayColumn = rmtd ? rmtd.propertyName : primaryColumn;
+        const displayColumn = rmtd ? rmtd.propertyName : primaryColumn.propertyName;
         column['relation'] = {
           type: columnMeta.relationMetadata.relationType,
           name: columnMeta.relationMetadata.propertyName,
-          primaryColumn,
+          primaryColumn:primaryColumn.propertyName,
           displayColumn,
           url: Reflect.getMetadata(
             CONTROLLER_PATH_ENTITY,
-            columnMeta.relationMetadata.type,
+            primaryColumn.target
           ),
         };
       }
+      }
+    }
       columns.push(column);
     });
 
@@ -173,10 +183,6 @@ export class RouteMedataFactory {
         metadata.options &&
         (metadata.options as ColumnOptions).renderer
       ) {
-        // Reflect.getMetadata(
-        //   CONTROLLER_PATH_ENTITY,
-        //   columnMeta.relationMetadata.type,
-        // )
         result['renderer'] = JSON.parse(
           (metadata.options as ColumnOptions).renderer,
         );

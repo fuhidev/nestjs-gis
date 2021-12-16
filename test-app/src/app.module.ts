@@ -77,47 +77,78 @@ import {
         port: 1433,
         username: 'sa',
         password: 'Ditagis123',
-        database: 'NhaBeBilling',
+        database: 'NinhThuan_TaiNguyenBien',
         synchronize: false,
       },
       restEntities: [
         {
-          path:'rest/khach-hang',
-          tableName:'KhachHang',
-          columns:[
-            {
-              propertyName:'danhBa',
-              // name:'DocSoId',
-              primary:true,type:'varchar'
-            },
-            {propertyName:'tenKH',type:'nvarchar'}
-          ]
+          path: 'rest/dm-loai-cang',
+          tableName: 'CangBien_DM_Loai',
+          columns: [
+            { propertyName: 'code', type: 'nvarchar', primary: true ,alias:'Mã'},
+            { propertyName: 'value', type: 'nvarchar', isDisplayColumn: true ,alias:'Giá trị'},
+          ],
         },
         {
-          path:'rest/doc-so',
-          tableName:'DocSo',
-          columns:[
+          path: 'rest/cang-bien',
+          tableName: 'CangBien',
+          columns: [
+            { propertyName: 'objectId', type: 'int', primary: true },
+            { propertyName: 'ten', type: 'nvarchar', isDisplayColumn: true ,alias:'Tên'},
+            { propertyName: 'maLoai', type: 'nvarchar', name: 'Loai',alias:'Loại cảng biển' },
             {
-              propertyName:'docSoId',
-              // name:'DocSoId',
-              primary:true,type:'varchar'
+              propertyName: 'loai',
+              join: {
+                type: 'many-to-one',
+                target: 'CangBien_DM_Loai',
+                joinColumn: {
+                  name: 'Loai',
+                },
+              },
             },
-            {
-              propertyName:'soDanhBo',
-              name:'DanhBa',
-              type:'varchar'
-            },
-            {
-              propertyName:'khachHang',
-              join:{
-                target:'KhachHang',
-                type:'many-to-one',
-                joinColumn:{name:'DanhBa'}
-              }
-            }
+            {propertyName:'dienTich',type:'decimal',alias:'Diện tích'},
+            {propertyName:'congSuat',type:'decimal',alias:'Công suất'},
+            {propertyName:'moTa',type:'nvarchar',alias:'Mô tả'}
+      
+          ],
+        },
+        // {
+        //   path:'rest/khach-hang',
+        //   tableName:'KhachHang',
+        //   columns:[
+        //     {
+        //       propertyName:'danhBa',
+        //       // name:'DocSoId',
+        //       primary:true,type:'varchar'
+        //     },
+        //     {propertyName:'tenKH',type:'nvarchar'}
+        //   ]
+        // },
+        // {
+        //   path:'rest/doc-so',
+        //   tableName:'DocSo',
+        //   columns:[
+        //     {
+        //       propertyName:'docSoId',
+        //       // name:'DocSoId',
+        //       primary:true,type:'varchar'
+        //     },
+        //     {
+        //       propertyName:'soDanhBo',
+        //       name:'DanhBa',
+        //       type:'varchar'
+        //     },
+        //     {
+        //       propertyName:'khachHang',
+        //       join:{
+        //         target:'KhachHang',
+        //         type:'many-to-one',
+        //         joinColumn:{name:'DanhBa'}
+        //       }
+        //     }
 
-          ]
-        }
+        //   ]
+        // }
         // {
         //   path: 'rest/dm-cap-di-tich',
         //   tableName: 'DiTich_DM_CapDiTich',
