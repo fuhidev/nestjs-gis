@@ -1,5 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ColumnOptions, JoinColumnOptions, RelationOptions } from 'typeorm';
+import { ColumnOptions } from '../typeorm/decorators/column';
+import { JoinColumnOptions, RelationOptions } from 'typeorm';
 
 export const dynamicRestConName = 'DynamicRestCon';
 
@@ -7,7 +8,7 @@ export interface RestEntity {
   path: string;
   tableName: string;
   columns: Array<
-    ColumnOptions & {
+  ColumnOptions & {
       propertyName: string;
       join?: {
         type: 'one-to-one' | 'many-to-one' | 'one-to-many';

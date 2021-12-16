@@ -4,15 +4,7 @@ import { Crud } from '@nestjsx/crud/lib/decorators/crud.decorator';
 import { GISTypeOrmCrudService } from '../crud-typeorm/typeorm-crud.service';
 import { GISCrud } from '../crud/crud.decorator';
 import { RouteMetadata } from '../decorators/route-metadata.decorator';
-import {
-  Column,
-  ColumnType,
-  ColumnTypeUndefinedError,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  OneToMany,
-} from 'typeorm';
+import { ColumnType, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import {
   dynamicRestConName,
   DynamicRestOptions,
@@ -20,6 +12,7 @@ import {
 import { __decorate, __metadata, __param } from './dynamic-rest.util';
 import { geometryTransformer } from '../transformer/geometry.transformer';
 import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
+import { Column } from '../typeorm/decorators/column';
 
 export function generateDynamicRest(options: DynamicRestOptions) {
   const { restEntities } = options;
@@ -100,9 +93,11 @@ export function generateDynamicRest(options: DynamicRestOptions) {
     };
     const primaryCol = item.columns.find(f => f.primary);
     const queryJoin = {};
-    item.columns.filter(f=>f.join).forEach(col=>{
-      queryJoin[col.propertyName] = {};
-    })
+    item.columns
+      .filter(f => f.join)
+      .forEach(col => {
+        queryJoin[col.propertyName] = {};
+      });
     ControllerCls = __decorate(
       [
         RouteMetadata(),

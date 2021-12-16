@@ -71,85 +71,122 @@ import {
     DynamicRestModule.forRoot({
       dbConfig: {
         options: { encrypt: false },
-        keepConnectionAlive: true,
+        // keepConnectionAlive: true,
         type: 'mssql',
         host: '171.244.32.245',
         port: 1433,
         username: 'sa',
         password: 'Ditagis123',
-        database: 'NinhThuan_TaiNguyenBien',
+        database: 'NhaBeBilling',
         synchronize: false,
       },
       restEntities: [
         {
-          path: 'rest/dm-cap-di-tich',
-          tableName: 'DiTich_DM_CapDiTich',
-          columns: [
+          path:'rest/khach-hang',
+          tableName:'KhachHang',
+          columns:[
             {
-              propertyName: 'code',
-              name: 'Code',
-              type: 'nvarchar',
-              primary: true,
+              propertyName:'danhBa',
+              // name:'DocSoId',
+              primary:true,type:'varchar'
             },
-            {
-              propertyName: 'value',
-              name: 'Value',
-              type: 'nvarchar',
-            },
-          ],
+            {propertyName:'tenKH',type:'nvarchar'}
+          ]
         },
         {
-          path: 'rest/di-tich',
-          tableName: 'DITICH',
-          columns: [
+          path:'rest/doc-so',
+          tableName:'DocSo',
+          columns:[
             {
-              propertyName: 'objectId',
-              name: 'OBJECTID',
-              type: 'int',
-              primary: true,
+              propertyName:'docSoId',
+              // name:'DocSoId',
+              primary:true,type:'varchar'
             },
             {
-              propertyName: 'maCap',
-              name: 'CAP',
-              type: 'varchar',
+              propertyName:'soDanhBo',
+              name:'DanhBa',
+              type:'varchar'
             },
             {
-              propertyName: 'cap',
-              join: {
-                target: 'DiTich_DM_CapDiTich',
-                joinColumn: {
-                  name: 'CAP',
-                },
-                type: 'many-to-one',
+              propertyName:'khachHang',
+              join:{
+                target:'KhachHang',
+                type:'many-to-one',
+                joinColumn:{name:'DanhBa'}
+              }
+            }
+
+          ]
+        }
+        // {
+        //   path: 'rest/dm-cap-di-tich',
+        //   tableName: 'DiTich_DM_CapDiTich',
+        //   columns: [
+        //     {
+        //       propertyName: 'code',
+        //       name: 'Code',
+        //       type: 'nvarchar',
+        //       primary: true,
+        //     },
+        //     {
+        //       propertyName: 'value',
+        //       name: 'Value',
+        //       type: 'nvarchar',
+        //     },
+        //   ],
+        // },
+        // {
+        //   path: 'rest/di-tich',
+        //   tableName: 'DITICH',
+        //   columns: [
+        //     {
+        //       propertyName: 'objectId',
+        //       name: 'OBJECTID',
+        //       type: 'int',
+        //       primary: true,
+        //     },
+        //     {
+        //       propertyName: 'maCap',
+        //       name: 'CAP',
+        //       type: 'varchar',
+        //     },
+        //     {
+        //       propertyName: 'cap',
+        //       join: {
+        //         target: 'DiTich_DM_CapDiTich',
+        //         joinColumn: {
+        //           name: 'CAP',
+        //         },
+        //         type: 'many-to-one',
                 
-              },
-            },
-            {
-              propertyName: 'shape',
-              name: 'SHAPE',
-              type: 'geometry',
-              spatialFeatureType: GeometryTypeEnum.Point,
-            },
-          ],
-        },
-        {
-          path: 'rest/dam-pha-ven-bien',
-          tableName: 'DAMPHAVENBIEN',
-          columns: [
-            {
-              propertyName: 'objectId',
-              name: 'OBJECTID',
-              type: 'int',
-              primary: true,
-            },
-            {
-              propertyName: 'shape',
-              name: 'SHAPE',
-              type: 'geometry',
-              spatialFeatureType: GeometryTypeEnum.Polygon,
-            },
-          ],
-        },
+        //       },
+        //     },
+        //     {
+        //       propertyName: 'shape',
+        //       name: 'SHAPE',
+        //       type: 'geometry',
+        //       spatialFeatureType: GeometryTypeEnum.Point,
+        //     },
+        //   ],
+        // },
+        // {
+        //   path: 'rest/dam-pha-ven-bien',
+        //   tableName: 'DAMPHAVENBIEN',
+        //   columns: [
+        //     {
+        //       propertyName: 'objectId',
+        //       name: 'OBJECTID',
+        //       type: 'int',
+        //       primary: true,
+        //     },
+        //     {
+        //       propertyName: 'shape',
+        //       name: 'SHAPE',
+        //       type: 'geometry',
+        //       spatialFeatureType: GeometryTypeEnum.Polygon,
+        //     },
+        //   ],
+        // },
       ],
     }),
   ],
