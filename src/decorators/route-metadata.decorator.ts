@@ -38,6 +38,9 @@ export interface Metadata {
   tableType: string;
   geometryType?: GeometryType;
   renderer?: RendererMeta;
+  layerConfig?: {
+    [key: string]: any;
+  };
 }
 
 export enum GeometryType {
@@ -102,30 +105,31 @@ export class RouteMedataFactory {
               f.target.name === columnMeta.relationMetadata.type) ||
             (typeof f.target === 'function' &&
               typeof columnMeta.relationMetadata.type === 'function' &&
-              (columnMeta.relationMetadata.type.prototype instanceof f.target
-                || f.target === columnMeta.relationMetadata.type
-                )),
+              (columnMeta.relationMetadata.type.prototype instanceof f.target ||
+                f.target === columnMeta.relationMetadata.type)),
         );
-        if(relationMetadatas.length){
-        const primaryColumn = relationMetadatas.find(f => f.options.primary);
-        if(primaryColumn){
-        const rmtd = relationMetadatas.find(
-          f => (f.options as ColumnOptions).isDisplayColumn,
-        );
-        const displayColumn = rmtd ? rmtd.propertyName : primaryColumn.propertyName;
-        column['relation'] = {
-          type: columnMeta.relationMetadata.relationType,
-          name: columnMeta.relationMetadata.propertyName,
-          primaryColumn:primaryColumn.propertyName,
-          displayColumn,
-          url: Reflect.getMetadata(
-            CONTROLLER_PATH_ENTITY,
-            primaryColumn.target
-          ),
-        };
+        if (relationMetadatas.length) {
+          const primaryColumn = relationMetadatas.find(f => f.options.primary);
+          if (primaryColumn) {
+            const rmtd = relationMetadatas.find(
+              f => (f.options as ColumnOptions).isDisplayColumn,
+            );
+            const displayColumn = rmtd
+              ? rmtd.propertyName
+              : primaryColumn.propertyName;
+            column['relation'] = {
+              type: columnMeta.relationMetadata.relationType,
+              name: columnMeta.relationMetadata.propertyName,
+              primaryColumn: primaryColumn.propertyName,
+              displayColumn,
+              url: Reflect.getMetadata(
+                CONTROLLER_PATH_ENTITY,
+                primaryColumn.target,
+              ),
+            };
+          }
+        }
       }
-      }
-    }
       columns.push(column);
     });
 
@@ -193,6 +197,7 @@ export class RouteMedataFactory {
         );
         if (layerEntity) {
           const config = layerEntity.config as any;
+          result.layerConfig = config;
           Object.assign(result, config);
         }
       } catch (error) {}
