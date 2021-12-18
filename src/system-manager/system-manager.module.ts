@@ -21,6 +21,10 @@ import { DatasetEntity } from './dataset/dataset.entity';
 import { LayerEntity } from './layer/layer.entity';
 import { ApplicationEntity } from './application';
 import { ApplicationGroupEntity } from './application-group';
+import { DomainModule } from './domain/domain.module';
+import { DomainGroupModule } from './domain-group/domain-group.module';
+import { DomainGroupEntity } from './domain-group/domain-group.entity';
+import { DomainEntity } from './domain/domain.entity';
 export const systemEntities = [
   UserEntity,
   UserStatusEntity,
@@ -32,6 +36,8 @@ export const systemEntities = [
   LayerEntity,
   ApplicationEntity,
   ApplicationGroupEntity,
+  DomainGroupEntity,
+  DomainEntity,
 ];
 @Module({})
 export class SystemManagerModule {
@@ -40,6 +46,8 @@ export class SystemManagerModule {
     return {
       module: SystemManagerModule,
       imports: [
+        DomainGroupModule,
+        DomainModule,
         UserModule,
         DatasetModule,
         LayerModule,

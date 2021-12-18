@@ -14,7 +14,10 @@ export class AuthService {
     @InjectEntityManager() private entityManager: EntityManager,
   ) {}
   verifyToken(token: string) {
-    return this.jwtService.verify(token);
+    try {
+      return this.jwtService.verify(token);
+    } catch (error) {}
+    return false;
   }
   async validateUser(username: string, password: string): Promise<UserEntity> {
     let result = {

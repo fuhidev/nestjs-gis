@@ -47,20 +47,19 @@ export class LayerEntity {
     transformer: {
       from: value => {
         if (value && typeof value === 'string') {
-            try {
-              value = JSON.parse(value);
-            } catch (error) {
-              value = {};
-            }
+          try {
+            value = JSON.parse(value);
+          } catch (error) {
+            value = {};
           }
-          return value;
-        
+        }
+        return value;
       },
       to: value => {
         if (value && typeof value === 'object') {
-            value = JSON.stringify(value);
-          }
-          return value;
+          value = JSON.stringify(value);
+        }
+        return value;
       },
     },
   })
@@ -84,6 +83,5 @@ export class LayerEntity {
   // types?: FeatureTypeProperties[];
   // url?: string;
 
-  @BeforeUpdate()
-  stringifyConfig() {}
+  @Column({ name: 'STT', type: 'int', default: 0 }) stt: number;
 }
