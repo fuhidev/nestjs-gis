@@ -127,6 +127,7 @@ export class AuthService {
         'isCreate=lyrs.isCreate',
         'isDelete=lyrs.isDelete',
         'isEdit=lyrs.isEdit',
+        'stt = lr.stt',
         'definition=lyrs.definition',
         'url=lr.url',
         'outFields = lyrs.outFields',
@@ -134,16 +135,21 @@ export class AuthService {
         'updateFields = lyrs.updateFields',
         'datasetId=dts.datasetId',
         'datasetName=dts.datasetName',
+        'datasetStt = dts.stt'
       ])
+      .orderBy('dts.stt','ASC')
+      .addOrderBy('lr.stt','ASC')
       .getRawMany();
     result.forEach(r => {
       r.dataset = {
         datasetId: r.datasetId,
         datasetName: r.datasetName,
+        stt:r.datasetStt
       };
       r.isVisible = true;
       delete r.datasetId;
       delete r.datasetName;
+      delete r.datasetStt;
     });
     return result;
     // return user.role.layers.forEach((roleLayer) => {

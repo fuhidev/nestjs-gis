@@ -22,19 +22,19 @@ import {
 
 @Module({
   imports: [
-    // TypeOrmModule.forRoot({
-    //   options: { encrypt: false },
-    //   keepConnectionAlive: true,
-    //   type: 'mssql',
-    //   host: '171.244.32.245',
-    //   port: 1433,
-    //   username: 'sa',
-    //   password: 'Ditagis123',
-    //   database: 'NinhThuan_TaiNguyenBien',
-    //   synchronize: false,
-    //   logging: false,
-    //   entities: ['dist/**/*.entity{.ts,.js}', ...systemEntities],
-    // }),
+    TypeOrmModule.forRoot({
+      options: { encrypt: false },
+      keepConnectionAlive: true,
+      type: 'mssql',
+      host: '171.244.32.245',
+      port: 1433,
+      username: 'sa',
+      password: 'Ditagis123',
+      database: 'NinhThuan_TaiNguyenBien',
+      synchronize: false,
+      logging: false,
+      entities: ['dist/**/*.entity{.ts,.js}', ...systemEntities],
+    }),
     // TaiNguyenBienModule,
     GeometryModule.forRoot({
       srs: {
@@ -62,12 +62,12 @@ import {
     //   arcUrl: 'http://ditagis.com/arcgis',
     //   route: 'ditagis',
     // }),
-    // SystemManagerModule.forRoot({
-    //   connection: 'gis',
-    //   jwt: {
-    //     secret: 'hieu ',
-    //   },
-    // }),
+    SystemManagerModule.forRoot({
+      connection: 'gis',
+      jwt: {
+        secret: 'hieu ',
+      },
+    }),
     DynamicRestModule.forRoot({
       dbConfig: {
         options: { encrypt: false },
