@@ -1,3 +1,4 @@
+//@ts-ignore
 import { AsyncLocalStorage } from 'async_hooks';
 import { Request, Response } from 'express';
 

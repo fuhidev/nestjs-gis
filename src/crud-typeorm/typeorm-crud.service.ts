@@ -1,7 +1,7 @@
 import { TypeOrmCrudService as BaseTypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import * as arcgis from 'terraformer-arcgis-parser';
 import * as wkt from 'terraformer-wkt-parser';
-import { SelectQueryBuilder, Repository, DeepPartial } from 'typeorm';
+import { SelectQueryBuilder, Repository, DeepPartial, In } from 'typeorm';
 import {
   CreateManyDto,
   CrudRequest,
@@ -12,7 +12,6 @@ import { Geometry } from 'terraformer-arcgis-parser';
 import {
   FilterGeoBody,
   GISCrudRequest,
-  GISEntity,
   GISParsedRequestParams,
 } from './typeorm.interface';
 import { SpatialReference } from '../arcgis/interfaces/spatial-reference';
@@ -21,7 +20,6 @@ import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { ProjectGeometryService } from '../project-geometry/project-geometry.service';
 import { moduleOptions } from '../token';
 import { BadRequestException } from '@nestjs/common';
-import { CreateBuilderInterceptor } from '../interceptors/create-builder.interceptor';
 
 export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
   protected geometryService = new ProjectGeometryService();
@@ -48,14 +46,6 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     if (parsed.bbox) {
       await this.setAndWhereBBox(builder, parsed.bbox);
     }
-
-    // if (moduleOptions.interceptors) {
-    //   for (const interceptor of moduleOptions.interceptors) {
-    //     if (interceptor instanceof CreateBuilderInterceptor) {
-    //       await interceptor.intercept(this, builder, parsed, options, many);
-    //     }
-    //   }
-    // }
 
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
       await moduleOptions.hook.crudService.call(this, 'createBuilder', [
@@ -275,22 +265,49 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       }
     }
     dto[geoColumn.propertyName] = shape;
+
+    const { returnShallow } = req.options.routes.createOneBase;
+    const entity = this.prepareEntityBeforeSave(dto, req.parsed);
+    let result: T;
+    /* istanbul ignore if */
+    if (!entity) {
+      this.throwBadRequestException(`Empty data. Nothing to save.`);
+    }
     if (
       this.repo.metadata.columns.some(
         f => f.databaseName.toLowerCase() === 'objectid',
       )
     ) {
-      const [lastEntity] = await this.repo.find({
-        order: {
-          objectId: 'DESC',
-        } as any,
-        take: 1,
-      });
-      const objectId = lastEntity ? (lastEntity as any).objectId + 1 : 1;
-      (dto as any).objectId = objectId;
+      (entity as any).objectId = () =>
+        `(SELECT TOP 1 ISNULL(OBJECTID,0) + 1 FROM ${
+          this.repo.metadata.tableName
+        } ORDER BY OBJECTID DESC)`;
+    }
+    const primaryParam = this.getPrimaryParam(req.options);
+
+    const builder = this.repo
+      .createQueryBuilder()
+      .insert()
+      .values(entity)
+      .returning([primaryParam]);
+
+    const rez = await builder.execute();
+    const saved = rez.generatedMaps[0] as T;
+
+    if (returnShallow) {
+      result = saved;
+    } else {
+      if (
+        !primaryParam &&
+        (saved[primaryParam] === null || saved[primaryParam] === undefined)
+      ) {
+        result = saved;
+      } else {
+        req.parsed.search = { [primaryParam]: saved[primaryParam] };
+        result = await this.getOneOrFail(req);
+      }
     }
 
-    const result = await super.createOne(req, dto);
     if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
       if (result[geoColumn.propertyName]) {
         const { geometries } = await this.geometryService.project({
@@ -305,7 +322,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       }
     }
 
-    if (req.parsed.fGeo === 'geojson') {
+    if (req.parsed.fGeo === 'geojson' && result[geoColumn.propertyName]) {
       result[geoColumn.propertyName] = arcgis.parse(
         result[geoColumn.propertyName],
       );
@@ -357,11 +374,52 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         });
       }
     }
-    const result = await super.createMany(req, dto);
-    if (hasGeoData) {
-      const data: T[] = this.decidePagination(req.parsed, req.options)
-        ? (result as any).data
-        : result;
+    /* istanbul ignore if */
+    if (typeof dto !== 'object' || !Array.isArray(dto.bulk)) {
+      this.throwBadRequestException(`Empty data. Nothing to save.`);
+    }
+
+    const bulk = dto.bulk
+      .map(one => this.prepareEntityBeforeSave(one, req.parsed))
+      .filter(d => d !== undefined);
+
+    /* istanbul ignore if */
+    if (!bulk.length) {
+      this.throwBadRequestException(`Empty data. Nothing to save.`);
+    }
+    if (
+      this.repo.metadata.columns.some(
+        f => f.databaseName.toLowerCase() === 'objectid',
+      )
+    ) {
+      bulk.forEach((entity, idx) => {
+        (entity as any).objectId = () =>
+          `(SELECT TOP 1 ISNULL(OBJECTID,0) + ${idx} + 1 FROM ${
+            this.repo.metadata.tableName
+          } ORDER BY OBJECTID DESC)`;
+      });
+    }
+    const primaryParam = this.getPrimaryParam(req.options);
+
+    const builder = this.repo
+      .createQueryBuilder()
+      .insert()
+      .values(bulk)
+      .returning([primaryParam]);
+
+    const rez = await builder.execute();
+    const result = await this.find({
+      where: {
+        [primaryParam]: In(rez.generatedMaps.map(m => m[primaryParam])),
+      },
+      select: req.parsed.fields.length ? req.parsed.fields as any:undefined,
+    });
+
+    if (
+      !req.parsed.fields.length ||
+      req.parsed.fields.includes(geoColumn.propertyName)
+    ) {
+      let data = result;
       if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
@@ -378,7 +436,8 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
 
       if (req.parsed.fGeo === 'geojson') {
         data.forEach(d => {
-          d[geoColumn.propertyName] = arcgis.parse(d[geoColumn.propertyName]);
+          if (d[geoColumn.propertyName])
+            d[geoColumn.propertyName] = arcgis.parse(d[geoColumn.propertyName]);
         });
       }
     }

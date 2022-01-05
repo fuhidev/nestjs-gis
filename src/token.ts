@@ -1,5 +1,4 @@
 import { SpatialReference } from './arcgis';
-import { BaseInterceptor } from './interceptors/base.interceptor';
 
 export interface GeometryModuleOptions {
   srs: SpatialReference;
