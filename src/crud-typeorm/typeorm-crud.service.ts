@@ -58,11 +58,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     // }
 
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
-      await moduleOptions.hook.crudService.call(
-        this,
-        'createBuilder',
-        [builder,...arguments],
-      );
+      await moduleOptions.hook.crudService.call(this, 'createBuilder', [
+        builder,
+        ...arguments,
+      ]);
     }
 
     return builder;
@@ -71,7 +70,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
   protected async setAndWhereFilterGeo(
     builder: SelectQueryBuilder<T>,
     filterGeo: FilterGeoBody,
-    pAlias = this.alias
+    pAlias = this.alias,
   ) {
     const geoColumn = this.getGeometryColumn();
     let geoFilter: arcgis.Geometry;
@@ -100,7 +99,9 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     let wktGeo = wkt.convert(arcgis.parse(geoFilter));
     if (wktGeo) {
       const alias = pAlias ? pAlias + '.' : '';
-      const where = `${alias}${geoColumn.propertyName}.STIntersects('${wktGeo}') = 1`;
+      const where = `${alias}${
+        geoColumn.propertyName
+      }.STIntersects('${wktGeo}') = 1`;
       if (builder.getSql().search('WHERE') === -1) builder.where(where);
       else builder.andWhere(where);
     }
@@ -117,7 +118,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
   protected async setAndWhereBBox(
     builder: SelectQueryBuilder<T>,
     bbox: arcgis.Envelope,
-    pAlias = this.alias
+    pAlias = this.alias,
   ) {
     const geoColumn = this.getGeometryColumn();
 
@@ -228,7 +229,6 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         arguments,
       );
     }
-
   }
 
   async getOne(crud: GISCrudRequest) {
@@ -243,13 +243,12 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         crud.parsed.fGeo,
       );
 
-      if (moduleOptions.hook && moduleOptions.hook.crudService) {
-        await moduleOptions.hook.crudService.call(
-          this,
-          'getOne',
-          [result,...arguments],
-        );
-      }
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(this, 'getOne', [
+        result,
+        ...arguments,
+      ]);
+    }
     return result;
   }
 
@@ -312,11 +311,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       );
     }
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
-      await moduleOptions.hook.crudService.call(
-        this,
-        'createOne',
-        [result,...arguments],
-      );
+      await moduleOptions.hook.crudService.call(this, 'createOne', [
+        result,
+        ...arguments,
+      ]);
     }
     return result;
   }
@@ -385,11 +383,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       }
     }
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
-      await moduleOptions.hook.crudService.call(
-        this,
-        'createMany',
-        [result,...arguments],
-      );
+      await moduleOptions.hook.crudService.call(this, 'createMany', [
+        result,
+        ...arguments,
+      ]);
     }
     return result;
   }
@@ -438,11 +435,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       );
     }
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
-      await moduleOptions.hook.crudService.call(
-        this,
-        'updateOne',
-        [result,...arguments],
-      );
+      await moduleOptions.hook.crudService.call(this, 'updateOne', [
+        result,
+        ...arguments,
+      ]);
     }
     return result;
   }
@@ -456,6 +452,16 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     );
   }
 
+  async deleteOne(req: CrudRequest): Promise<void | T> {
+    const result = await super.deleteOne(req);
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(this, 'deleteOne', [
+        ...arguments,
+      ]);
+    }
+    return result;
+  }
+
   async executeSql(params: { query: string }) {
     if (!params.query.length) {
       throw new BadRequestException('Không xác định được lệnh');
@@ -463,11 +469,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     try {
       const query = `UPDATE ${this.repo.metadata.tableName} ${params.query}`;
       if (moduleOptions.hook && moduleOptions.hook.crudService) {
-        await moduleOptions.hook.crudService.call(
-          this,
-          'executeQuery',
-          [query,...arguments],
-        );
+        await moduleOptions.hook.crudService.call(this, 'executeQuery', [
+          query,
+          ...arguments,
+        ]);
       }
       await this.repo.query(query);
     } catch (error) {
@@ -504,11 +509,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
   async getCount(req: GISCrudRequest) {
     const builder = await this.createBuilder(req.parsed, req.options);
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
-      await moduleOptions.hook.crudService.call(
-        this,
-        'getCount',
-        [builder,...arguments],
-      );
+      await moduleOptions.hook.crudService.call(this, 'getCount', [
+        builder,
+        ...arguments,
+      ]);
     }
     const count = await builder.getCount();
     return {
