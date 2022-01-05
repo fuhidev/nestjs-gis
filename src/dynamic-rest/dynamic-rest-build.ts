@@ -1,4 +1,4 @@
-import { Controller, Injectable, Module } from '@nestjs/common';
+import { Controller, Injectable, Module, UseGuards } from '@nestjs/common';
 import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm';
 import { Crud } from '@nestjsx/crud/lib/decorators/crud.decorator';
 import { GISTypeOrmCrudService } from '../crud-typeorm/typeorm-crud.service';
@@ -13,6 +13,7 @@ import { __decorate, __metadata, __param } from './dynamic-rest.util';
 import { geometryTransformer } from '../transformer/geometry.transformer';
 import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import { Column } from '../typeorm/decorators/column';
+import { JwtAuthGuard } from '../system-manager/auth/jwt-auth.guard';
 
 export function generateDynamicRest(options: DynamicRestOptions) {
   const { restEntities } = options;
@@ -100,9 +101,11 @@ export function generateDynamicRest(options: DynamicRestOptions) {
       });
     ControllerCls = __decorate(
       [
+        ...(item.decorators ? item.decorators : []),
         RouteMetadata(),
         ...(isGisTable ? [GISCrud()] : []),
         Crud({
+          ...item.crudOptions,
           model: { type: EntityCls },
           params: {
             id: {
@@ -110,9 +113,22 @@ export function generateDynamicRest(options: DynamicRestOptions) {
               field: primaryCol.propertyName,
               type: sqlType2Js(primaryCol.type) as any,
             },
+            ...(item.crudOptions && item.crudOptions.params
+              ? item.crudOptions.params
+              : {}),
           },
           query: {
-            join: queryJoin,
+            ...(item.crudOptions && item.crudOptions.query
+              ? item.crudOptions.query
+              : {}),
+            join: {
+              ...queryJoin,
+              ...(item.crudOptions &&
+              item.crudOptions.query &&
+              item.crudOptions.query.join
+                ? item.crudOptions.query.join
+                : {}),
+            },
           },
         }),
         Controller(item.path),
