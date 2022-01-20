@@ -130,6 +130,7 @@ import {
             { propertyName: 'dienTich', type: 'decimal', alias: 'Diện tích' },
             { propertyName: 'congSuat', type: 'decimal', alias: 'Công suất' },
             { propertyName: 'moTa', type: 'nvarchar', alias: 'Mô tả' },
+            {propertyName:'shape',spatialFeatureType:GeometryTypeEnum.Polygon,type:'geometry'}
           ],
         },
         {
@@ -210,6 +211,42 @@ import {
         },
       ],
     }),
+    // DynamicRestModule.forRoot({
+    //   dbConfig: {
+    //     options: { encrypt: false },
+    //     keepConnectionAlive: true,
+    //     type: "mssql",
+    //     host: "171.244.32.245",
+    //     port: 1433,
+    //     username: "sa",
+    //     password: "Ditagis123",
+    //     database: "TIWAGIS",
+    //     synchronize: false,
+    //   },
+    //   restEntities: [
+    //     {
+    //       path: "rest/dong-ho-tong-chi-tiet",
+    //       tableName: "DongHoTongChiTiet",
+    //       crudOptions:{
+    //         routes:{
+    //           updateOneBase:{
+    //             allowParamsOverride:true
+    //           }
+    //         }
+    //       },
+    //       columns: [
+    //         { propertyName: "ID", type: "int", primary: true, generated: true },
+    //         { propertyName: "IDMaDongHo", type: "varchar" },
+    //         { propertyName: "ApLuc", type: "float" },
+    //         { propertyName: "LuuLuong", type: "float" },
+    //         { propertyName: "SanLuong", type: "bigint" },
+    //         { propertyName: "NgayCapNhat", type: "datetime" },
+    //         { propertyName: "NguoiCapNhat", type: "varchar" },
+    //         { propertyName: "ThoiGian", type: "datetime" },
+    //       ],
+    //     },
+    //   ],
+    // }),
   ],
   controllers: [AppController],
   providers: [AppService],

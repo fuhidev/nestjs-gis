@@ -578,4 +578,23 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       count,
     };
   }
+  async getSum(req: GISCrudRequest) {
+    if(!req.parsed.fields.length){
+      return {
+        sum:0
+      }
+    }
+    const builder = await this.createBuilder(req.parsed, req.options);
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(this, 'getSum', [
+        builder,
+        ...arguments,
+      ]);
+    }
+    builder.select(`sum(${req.parsed.fields[0]})`,'sum')
+    const result = await  builder.getRawOne();
+    return {
+      sum:result.sum,
+    };
+  }
 }

@@ -44,18 +44,15 @@ export class GISCrudRoutesFactory {
       },
     };
 
-    Reflect.defineMetadata(
-      ROUTE_ARGS_METADATA,
-      { ...requestArg },
-      this.target,
-      'getCountBase',
-    );
-    Reflect.defineMetadata(
-      ROUTE_ARGS_METADATA,
-      { ...requestArg },
-      this.target,
-      'getManyBasePost',
-    );
+    ['getCountBase', 'getSumBase', 'getManyBasePost'].forEach(route => {
+      Reflect.defineMetadata(
+        ROUTE_ARGS_METADATA,
+        { ...requestArg },
+        this.target,
+        route,
+      );
+    });
+
     Reflect.defineMetadata(
       ROUTE_ARGS_METADATA,
       {
@@ -111,6 +108,7 @@ export class GISCrudRoutesFactory {
       'createManyBase',
       'exportShpManyBase',
       'getCountBase',
+      'getSumBase',
     ].forEach(route => {
       Reflect.defineMetadata(
         INTERCEPTORS_METADATA,
@@ -134,6 +132,9 @@ export class GISCrudRoutesFactory {
     };
     this.target.prototype.getCountBase = function(req) {
       return this.service.getCount(req);
+    };
+    this.target.prototype.getSumBase = function(req) {
+      return this.service.getSum(req);
     };
     this.target.prototype.exportShpManyBase = async function(
       req: GISCrudRequest,
@@ -198,6 +199,11 @@ export class GISCrudRoutesFactory {
       this.target.prototype,
       null,
       { value: this.target.prototype.getCountBase },
+    );
+    RequestMapping({ method: RequestMethod.GET, path: '/sum' })(
+      this.target.prototype,
+      null,
+      { value: this.target.prototype.getSumBase },
     );
 
     if (getOneBasePath) {
