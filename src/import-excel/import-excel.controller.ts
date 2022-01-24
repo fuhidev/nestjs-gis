@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  HttpCode,
   Post,
   Query,
   Res,
@@ -28,6 +29,7 @@ export class ImportExcelController {
   }
 
   @Post('import')
+  @HttpCode(200)
   @UseInterceptors(FileInterceptor('file'))
   docFileExcel(
     @UploadedFile() file,
@@ -37,6 +39,7 @@ export class ImportExcelController {
     return this.service.importExcel({ url, file, srs });
   }
   @Post('exceldata')
+  @HttpCode(200)
   @UseInterceptors(FileInterceptor('file'))
   getExcelData(
     @UploadedFile() file,
