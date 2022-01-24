@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Workbook } from 'exceljs';
 import fetch from 'node-fetch';
+import { ProjectGeometryService } from '../project-geometry/project-geometry.service';
 import * as arcgis from 'terraformer-arcgis-parser';
-import {
-  GeometryType,
-  Metadata,
-} from '../decorators/route-metadata.decorator';
+import { GeometryType, Metadata } from '../decorators/route-metadata.decorator';
 import { moduleOptions } from '../token';
+import { SpatialReference } from '../arcgis/interfaces/spatial-reference';
 @Injectable()
 export class ImportExcelService {
+  protected geometryService = new ProjectGeometryService();
   public async getTemplate(p: { url: string }) {
     const { url } = p;
     let baseUrl = this.getHostname(url);
@@ -35,8 +35,8 @@ export class ImportExcelService {
         let relationEntities = [];
         try {
           relationEntities = await fetch(
-            baseUrl + '/' + field.relation.url
-          ).then((t) => t.json());
+            baseUrl + '/' + field.relation.url,
+          ).then(t => t.json());
         } catch (error) {}
 
         let formulae = `${
@@ -74,7 +74,7 @@ export class ImportExcelService {
       ws.getCell(1, cidx + 1).value = 'Y';
       ws.columns.forEach((column, i) => {
         let maxlength = 0;
-        column.eachCell({ includeEmpty: true }, (cell) => {
+        column.eachCell({ includeEmpty: true }, cell => {
           let columnLength = cell.value ? cell.value.toString().length : 10;
           if (columnLength > maxlength) {
             maxlength = columnLength;
@@ -103,7 +103,81 @@ export class ImportExcelService {
   private async getMetadata(url: string): Promise<Metadata> {
     return fetch(url + '/metadata', {
       method: 'GET',
-    }).then((t) => t.json());
+    }).then(t => t.json());
+  }
+
+  public async getExcelData(p: {
+    file;
+    srs: number | SpatialReference;
+    outSRS?: number | SpatialReference;
+  }) {
+    let { file, srs, outSRS } = p;
+    srs = srs || moduleOptions.srs;
+    outSRS = outSRS || 4326;
+    if (
+      file.mimetype !==
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ) {
+      throw new BadRequestException('file không đúng định dạng .xlsx');
+    }
+
+    const wb = new Workbook();
+    await wb.xlsx.load(file.buffer);
+
+    const ws = wb.worksheets[0];
+    if (ws.rowCount < 2) {
+      throw new BadRequestException(
+        'Số lượng cột không đủ, bắt buộc phải có cột X và Y',
+      );
+    }
+    let values: any[] = [];
+    let columns: string[] = [];
+    try {
+      ws.getRow(1).eachCell(cell => {
+        columns.push(cell.value as string);
+      });
+    } catch (error) {
+      throw new BadRequestException('Tên cột không đúng định dạng');
+    }
+    for (let rIdx = 2; rIdx <= ws.rowCount; rIdx++) {
+      let value = {};
+      // lay X,Y de tao geometry
+      let x, y;
+
+      x = ws.getCell(rIdx, ws.columnCount - 1).value; // x la cot gan cuoi
+      y = ws.getCell(rIdx, ws.columnCount).value; //y la cot cuoi
+      // neu khong co x,y thi bo qua
+      if (!(x && y)) {
+        continue;
+      }
+
+      value['shape'] = {
+        coordinates: [x, y],
+        type: 'Point',
+      } as GeoJSON.Point;
+      if (ws.columnCount > 2) {
+        columns.forEach((colName, cIdx) => {
+          value[colName] = ws.getCell(rIdx, cIdx + 1).value;
+        });
+        values.push(value);
+      }
+    }
+    try {
+      const geometries = values.map(m => m.shape);
+      const {
+        geometries: resGeometries,
+      } = await this.geometryService.projectGeojson({
+        inSR: srs,
+        outSR: outSRS,
+        geometries,
+      });
+      resGeometries.forEach((geo, idx) => {
+        values[idx].shape = geo;
+      });
+    } catch (error) {}
+    return {
+      data: values,
+    };
   }
 
   public async importExcel(p: { url: string; file; srs: string }) {
@@ -144,8 +218,7 @@ export class ImportExcelService {
       value['shape'] = {
         x,
         y,
-        spatialReference:
-          srs === '2000' ? moduleOptions.srs : { wkid: 4326 },
+        spatialReference: srs === '2000' ? moduleOptions.srs : { wkid: 4326 },
       } as arcgis.Point;
       // value['NgayCapNhat'] = new Date().getTime();
       // value['NguoiCapNhat'] = username;
@@ -164,8 +237,10 @@ export class ImportExcelService {
         ) {
           try {
             const relationEntities = await fetch(
-              `${hostname}/${field.relation.url}?filter=${field.relation.displayColumn}||$eq||${cellValue}`
-            ).then((t) => t.json());
+              `${hostname}/${field.relation.url}?filter=${
+                field.relation.displayColumn
+              }||$eq||${cellValue}`,
+            ).then(t => t.json());
             if (relationEntities.length) {
               const entity = relationEntities[0];
               value[field.name] = entity[field.relation.primaryColumn];
@@ -182,17 +257,17 @@ export class ImportExcelService {
     }
 
     const result = await Promise.all(
-      values.map((value) => {
-        return fetch(url+'?outSR=4326', {
+      values.map(value => {
+        return fetch(url + '?outSR=4326', {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
           },
           body: JSON.stringify(value),
-        }).then(t=>t.json());
-      })
+        }).then(t => t.json());
+      }),
     );
 
-    return { data:result };
+    return { data: result };
   }
 }

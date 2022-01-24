@@ -8,6 +8,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { SpatialReference } from '../arcgis';
 import { ImportExcelService } from './import-excel.service';
 
 @Controller('gis/import-excel')
@@ -18,7 +19,7 @@ export class ImportExcelController {
     var fileName = 'filemau.xlsx';
     res.setHeader(
       'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
     res.setHeader('Content-Disposition', 'attachment; filename=' + fileName);
     const workbook = await this.service.getTemplate({ url });
@@ -31,8 +32,17 @@ export class ImportExcelController {
   docFileExcel(
     @UploadedFile() file,
     @Query('url') url: string,
-    @Query('srs') srs: string
+    @Query('srs') srs: string,
   ) {
     return this.service.importExcel({ url, file, srs });
+  }
+  @Post('exceldata')
+  @UseInterceptors(FileInterceptor('file'))
+  getExcelData(
+    @UploadedFile() file,
+    @Query('srs') srs: SpatialReference | number,
+    @Query('outsrs') outSRS: SpatialReference | number,
+  ) {
+    return this.service.getExcelData({ file, srs,outSRS });
   }
 }
