@@ -97,6 +97,21 @@ export class GISCrudRoutesFactory {
     );
   }
 
+  private canCreateRoute(name: string) {
+    const only = this.options.routes.only;
+    const exclude = this.options.routes.exclude;
+
+    if (Array.isArray(only) && only.length) {
+      return only.some(route => route === name);
+    }
+
+    if (Array.isArray(exclude) && exclude.length) {
+      return !exclude.some(route => route === name);
+    }
+
+    return true;
+  }
+
   private setInterceptors() {
     [
       'getManyBase',
@@ -110,6 +125,7 @@ export class GISCrudRoutesFactory {
       'getCountBase',
       'getSumBase',
     ].forEach(route => {
+      this.canCreateRoute(route);
       Reflect.defineMetadata(
         INTERCEPTORS_METADATA,
         [GISCrudRequestInterceptor, CrudResponseInterceptor],
@@ -177,17 +193,17 @@ export class GISCrudRoutesFactory {
       null,
       { value: this.target.prototype.executeSqlBase },
     );
+    let getOneBasePath: string, getOneBaseOld;
+    if (this.canCreateRoute('getOneBase')) {
+      getOneBaseOld = this.target.prototype.getOneBase;
 
-    let getOneBasePath: string;
-
-    const getOneBaseOld = this.target.prototype.getOneBase;
-
-    if (this.target.prototype.getOneBase) {
-      getOneBasePath = Reflect.getMetadata(
-        PATH_METADATA,
-        this.target.prototype.getOneBase,
-      );
-      delete this.target.prototype.getOneBase;
+      if (this.target.prototype.getOneBase) {
+        getOneBasePath = Reflect.getMetadata(
+          PATH_METADATA,
+          this.target.prototype.getOneBase,
+        );
+        delete this.target.prototype.getOneBase;
+      }
     }
 
     RequestMapping({ method: RequestMethod.GET, path: '/exportshp' })(
