@@ -5,7 +5,10 @@ import { ProjectGeometryService } from '../project-geometry/project-geometry.ser
 import * as arcgis from 'terraformer-arcgis-parser';
 import { GeometryType, Metadata } from '../decorators/route-metadata.decorator';
 import { moduleOptions } from '../token';
-import { equalSrs, SpatialReference } from '../arcgis/interfaces/spatial-reference';
+import {
+  equalSrs,
+  SpatialReference,
+} from '../arcgis/interfaces/spatial-reference';
 @Injectable()
 export class ImportExcelService {
   protected geometryService = new ProjectGeometryService();
@@ -162,24 +165,28 @@ export class ImportExcelService {
         values.push(value);
       }
     }
-    if(!equalSrs(srs,outSRS)){
-    try {
-      const geometries = values.map(m => m.shape);
-      const {
-        geometries: resGeometries,
-      } = await this.geometryService.projectGeojson({
-        inSR: srs,
-        outSR: outSRS,
-        geometries,
-      });
-      resGeometries.forEach((geo, idx) => {
-        values[idx].shape = geo;
-      });
-    } catch (error) {}
+    if (!equalSrs(srs, outSRS)) {
+      try {
+        const geometries = values.map(m => m.shape);
+        const {
+          geometries: resGeometries,
+        } = await this.geometryService.projectGeojson({
+          inSR: srs,
+          outSR: outSRS,
+          geometries,
+        });
+        resGeometries.forEach((geo, idx) => {
+          values[idx].shape = geo;
+        });
+      } catch (error) {
+        throw new BadRequestException(
+          'Có lỗi xảy ra trong quá trình chuyển hệ tọa độ, vui lòng kiểm tra lại dữ liệu',
+        );
+      }
+    }
     return {
       data: values,
     };
-  }
   }
 
   public async importExcel(p: { url: string; file; srs: string }) {
