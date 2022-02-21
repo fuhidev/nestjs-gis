@@ -1,10 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ColumnOptions } from '../typeorm/decorators/column';
 import { JoinColumnOptions, RelationOptions } from 'typeorm';
-import { NestInterceptor } from '@nestjs/common';
 import { CrudOptions } from '@nestjsx/crud';
-
-export const dynamicRestConName = 'DynamicRestCon';
 
 export interface RestEntity {
   path: string;

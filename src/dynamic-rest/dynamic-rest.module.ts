@@ -2,7 +2,6 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { generateDynamicRest } from './dynamic-rest-build';
 import {
-  dynamicRestConName,
   DynamicRestOptions,
 } from './dynamic-rest.interface';
 
@@ -15,7 +14,6 @@ export class DynamicRestModule {
       imports: [
         TypeOrmModule.forRoot({
           ...options.dbConfig,
-          name: dynamicRestConName,
           entities: res.entities,
         }),
         ...res.modules,

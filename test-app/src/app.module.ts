@@ -73,6 +73,31 @@ import {
       dbConfig: {
         options: { encrypt: false },
         // keepConnectionAlive: true,
+        name:'sdoc',
+        type: 'mssql',
+        host: '171.244.32.245',
+        port: 1433,
+        username: 'sa',
+        password: 'Ditagis123',
+        database: 'SDoc_NinhThuan',
+        synchronize: false,
+      },
+      restEntities:[
+        {
+          path: 'rest/sdoc/file-group',
+          tableName: 'FileGroup',
+          columns: [
+            {  type: 'smallint', propertyName: 'id' ,primary:true},
+            {  type: 'nvarchar', propertyName: 'groupName' },
+          ],
+        },
+      ]
+    }),
+    DynamicRestModule.forRoot({
+      dbConfig: {
+        options: { encrypt: false },
+        // keepConnectionAlive: true,
+        name:'restmodule',
         type: 'mssql',
         host: '171.244.32.245',
         port: 1433,

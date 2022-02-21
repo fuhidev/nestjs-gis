@@ -6,7 +6,6 @@ import { GISCrud } from '../crud/crud.decorator';
 import { RouteMetadata } from '../decorators/route-metadata.decorator';
 import { ColumnType, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import {
-  dynamicRestConName,
   DynamicRestOptions,
 } from './dynamic-rest.interface';
 import { __decorate, __metadata, __param } from './dynamic-rest.util';
@@ -79,7 +78,7 @@ export function generateDynamicRest(options: DynamicRestOptions) {
     Service = __decorate(
       [
         Injectable(),
-        __param(0, InjectRepository(EntityCls, dynamicRestConName)),
+        __param(0, InjectRepository(EntityCls, options.dbConfig.name)),
         __metadata('design:paramtypes', [Object]),
       ],
       Service,
@@ -141,7 +140,7 @@ export function generateDynamicRest(options: DynamicRestOptions) {
     ModuleCls = __decorate(
       [
         Module({
-          imports: [TypeOrmModule.forFeature([EntityCls], dynamicRestConName)],
+          imports: [TypeOrmModule.forFeature([EntityCls], options.dbConfig.name)],
           providers: [Service],
           controllers: [ControllerCls],
         }),
