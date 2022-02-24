@@ -307,9 +307,8 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         result = await this.getOneOrFail(req);
       }
     }
-
-    if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
-      if (result[geoColumn.propertyName]) {
+    if (result[geoColumn.propertyName]) {
+      if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
           outSR: req.parsed.outSR,
@@ -320,12 +319,12 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
           result[geoColumn.propertyName] = geometries[0];
         }
       }
-    }
 
-    if (req.parsed.fGeo === 'geojson' && result[geoColumn.propertyName]) {
-      result[geoColumn.propertyName] = arcgis.parse(
-        result[geoColumn.propertyName],
-      );
+      if (req.parsed.fGeo === 'geojson') {
+        result[geoColumn.propertyName] = arcgis.parse(
+          result[geoColumn.propertyName],
+        );
+      }
     }
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
       await moduleOptions.hook.crudService.call(this, 'createOne', [
@@ -412,7 +411,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       where: {
         [primaryParam]: In(rez.generatedMaps.map(m => m[primaryParam])),
       },
-      select: req.parsed.fields.length ? req.parsed.fields as any:undefined,
+      select: req.parsed.fields.length ? (req.parsed.fields as any) : undefined,
     });
 
     if (
@@ -474,8 +473,8 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
 
     const result = await super.updateOne(req, dto);
-    if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
-      if (result[geoColumn.propertyName]) {
+    if (result[geoColumn.propertyName]) {
+      if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
         const { geometries } = await this.geometryService.project({
           inSR: moduleOptions.srs,
           outSR: req.parsed.outSR,
@@ -486,13 +485,14 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
           result[geoColumn.propertyName] = geometries[0];
         }
       }
+
+      if (req.parsed.fGeo === 'geojson') {
+        result[geoColumn.propertyName] = arcgis.parse(
+          result[geoColumn.propertyName],
+        );
+      }
     }
 
-    if (req.parsed.fGeo === 'geojson') {
-      result[geoColumn.propertyName] = arcgis.parse(
-        result[geoColumn.propertyName],
-      );
-    }
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
       await moduleOptions.hook.crudService.call(this, 'updateOne', [
         result,
@@ -579,10 +579,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     };
   }
   async getSum(req: GISCrudRequest) {
-    if(!req.parsed.fields.length){
+    if (!req.parsed.fields.length) {
       return {
-        sum:0
-      }
+        sum: 0,
+      };
     }
     const builder = await this.createBuilder(req.parsed, req.options);
     if (moduleOptions.hook && moduleOptions.hook.crudService) {
@@ -591,10 +591,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         ...arguments,
       ]);
     }
-    builder.select(`sum(${req.parsed.fields[0]})`,'sum')
-    const result = await  builder.getRawOne();
+    builder.select(`sum(${req.parsed.fields[0]})`, 'sum');
+    const result = await builder.getRawOne();
     return {
-      sum:result.sum,
+      sum: result.sum,
     };
   }
 }
