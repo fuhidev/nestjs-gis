@@ -266,10 +266,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
     dto[geoColumn.propertyName] = shape;
 
-    const { returnShallow } = req.options.routes.createOneBase;
     const entity = this.prepareEntityBeforeSave(dto, req.parsed);
-    let result: T;
-    /* istanbul ignore if */
     if (!entity) {
       this.throwBadRequestException(`Empty data. Nothing to save.`);
     }
@@ -278,35 +275,17 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         f => f.databaseName.toLowerCase() === 'objectid',
       )
     ) {
-      (entity as any).objectId = () =>
-        `(SELECT TOP 1 ISNULL(OBJECTID,0) + 1 FROM ${
-          this.repo.metadata.tableName
-        } ORDER BY OBJECTID DESC)`;
+      const [lastEntity] = await this.repo.find({
+        order: {
+          objectId: 'DESC',
+        } as any,
+        take: 1,
+      });
+      const objectId = lastEntity ? (lastEntity as any).objectId + 1 : 1;
+      (dto as any).objectId = objectId;
     }
-    const primaryParam = this.getPrimaryParam(req.options);
 
-    const builder = this.repo
-      .createQueryBuilder()
-      .insert()
-      .values(entity)
-      .returning([primaryParam]);
-
-    const rez = await builder.execute();
-    const saved = rez.generatedMaps[0] as T;
-
-    if (returnShallow) {
-      result = saved;
-    } else {
-      if (
-        !primaryParam &&
-        (saved[primaryParam] === null || saved[primaryParam] === undefined)
-      ) {
-        result = saved;
-      } else {
-        req.parsed.search = { [primaryParam]: saved[primaryParam] };
-        result = await this.getOneOrFail(req);
-      }
-    }
+    const result = await super.createOne(req, dto);
     if (result[geoColumn.propertyName]) {
       if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
         const { geometries } = await this.geometryService.project({
