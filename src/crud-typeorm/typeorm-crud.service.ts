@@ -270,19 +270,32 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     if (!entity) {
       this.throwBadRequestException(`Empty data. Nothing to save.`);
     }
-    if (
-      this.repo.metadata.columns.some(
+    {
+      // objectId
+      const objectIdCol = this.repo.metadata.columns.find(
         f => f.databaseName.toLowerCase() === 'objectid',
-      )
-    ) {
-      const [lastEntity] = await this.repo.find({
-        order: {
-          objectId: 'DESC',
-        } as any,
-        take: 1,
-      });
-      const objectId = lastEntity ? (lastEntity as any).objectId + 1 : 1;
-      (dto as any).objectId = objectId;
+      );
+
+      // nếu objectId không tự tạo giá trị có nghĩa objectId được tạo từ Arcmap
+      // vì vậy phải sử dụng procedure của arcmap trong sql để lấy objectId
+      if (objectIdCol && !objectIdCol.isGenerated) {
+        try {
+          const result: Array<{ objectId: number }> = await this.repo
+            .query(`declare @rowid int
+            EXEC next_rowid 'dbo', '${
+              this.repo.metadata.tableName
+            }' ,@rowid output
+            select objectId = @rowid`);
+          if (result.length) {
+            const objectId = result[0].objectId;
+            (dto as any).objectId = objectId;
+          }
+        } catch (error) {
+          throw new BadRequestException(
+            'Không lấy được objectId từ dữ liệu GIS',
+          );
+        }
+      }
     }
 
     const result = await super.createOne(req, dto);
