@@ -288,7 +288,8 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
             select objectId = @rowid`);
           if (result.length) {
             const objectId = result[0].objectId;
-            (dto as any).objectId = objectId;
+            //@ts-ignore
+            dto[objectIdCol.propertyName] = objectId;
           }
         } catch (error) {
           throw new BadRequestException(
