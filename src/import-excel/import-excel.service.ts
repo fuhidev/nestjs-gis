@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Workbook } from 'exceljs';
 import fetch from 'node-fetch';
-import { ProjectGeometryService } from '../project-geometry/project-geometry.service';
+import { ProjectGeometryService } from '../geometry/project-geometry/project-geometry.service';
 import * as arcgis from 'terraformer-arcgis-parser';
 import { GeometryType, Metadata } from '../decorators/route-metadata.decorator';
 import { moduleOptions } from '../token';

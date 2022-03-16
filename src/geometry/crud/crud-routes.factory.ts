@@ -15,7 +15,7 @@ import {
 } from '@nestjsx/crud/lib/constants';
 import { GISCrudRequestInterceptor } from './gis-crud-request.interceptor';
 import * as geojson2shp from 'geojson2shp';
-import { GISCrudRequest } from 'src';
+import { GISCrudRequest } from 'src/geometry';
 import { Response } from 'express';
 export class GISCrudRoutesFactory {
   private options: MergedCrudOptions;

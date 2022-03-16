@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { CrudRequestInterceptor } from '@nestjsx/crud';
 import { PARSED_CRUD_REQUEST_KEY } from '@nestjsx/crud/lib/constants';
-import { GISCrudRequest } from 'src';
+import { GISCrudRequest } from 'src/geometry';
 import { moduleOptions } from '../token';
 
 @Injectable()

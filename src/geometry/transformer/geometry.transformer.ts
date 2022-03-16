@@ -1,7 +1,7 @@
 import * as wkt from 'terraformer-wkt-parser';
 import * as arcgis from 'terraformer-arcgis-parser';
-import { SpatialReference } from '../arcgis/interfaces/spatial-reference';
-import { moduleOptions } from '../token';
+import { SpatialReference } from '../../arcgis/interfaces/spatial-reference';
+import { moduleOptions } from '../../token';
 
 export const geometryTransformerSrs = (srs?: SpatialReference) => ({
   from: dbValue => {

@@ -17,7 +17,7 @@ import {
 import { SpatialReference } from '../arcgis/interfaces/spatial-reference';
 import { GeometryTypeEnum } from '../arcgis/interfaces/arcgis-geometry.interface';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
-import { ProjectGeometryService } from '../project-geometry/project-geometry.service';
+import { ProjectGeometryService } from '../geometry/project-geometry/project-geometry.service';
 import { moduleOptions } from '../token';
 import { BadRequestException } from '@nestjs/common';
 

@@ -1,6 +1,6 @@
 import { Geometry } from 'terraformer-arcgis-parser';
-import { GeometryTypeEnum } from '../arcgis/interfaces/arcgis-geometry.interface';
-import { SpatialReference } from '../arcgis/interfaces/spatial-reference';
+import { GeometryTypeEnum } from '../../arcgis/interfaces/arcgis-geometry.interface';
+import { SpatialReference } from '../../arcgis/interfaces/spatial-reference';
 
 export class ProjectGeometryParams {
   inSR?: SpatialReference | number;
