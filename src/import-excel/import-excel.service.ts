@@ -8,7 +8,7 @@ import { moduleOptions } from '../token';
 import {
   equalSrs,
   SpatialReference,
-} from '../arcgis/interfaces/spatial-reference';
+} from '../geometry/arcgis/interfaces/spatial-reference';
 @Injectable()
 export class ImportExcelService {
   protected geometryService = new ProjectGeometryService();

@@ -2,7 +2,7 @@ import { Controller, Injectable, Module, UseGuards } from '@nestjs/common';
 import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm';
 import { Crud } from '@nestjsx/crud/lib/decorators/crud.decorator';
 import { GISTypeOrmCrudService } from '../crud-typeorm/typeorm-crud.service';
-import { GISCrud } from '../crud/crud.decorator';
+import { GISCrud } from '../geometry/crud/crud.decorator';
 import { RouteMetadata } from '../decorators/route-metadata.decorator';
 import { ColumnType, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import {

@@ -2,9 +2,9 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { GeometryService } from './geometry.service';
 import { PlacesModule } from './places/places.module';
 import { ProjectGeometryModule } from './project-geometry/project-geometry.module';
-import { GeometryModuleOptions, setOptions } from './token';
-import { ImportExcelModule } from './import-excel/import-excel.module';
+import { GeometryModuleOptions, setOptions } from '../token';
 import { GeometryController } from './geometry.controller';
+import { ImportExcelModule } from '../import-excel/import-excel.module';
 
 @Module({
   imports: [ProjectGeometryModule, PlacesModule,ImportExcelModule],

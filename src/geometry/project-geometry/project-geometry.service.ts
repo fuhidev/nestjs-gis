@@ -7,8 +7,8 @@ import {
 } from './project-geometry.interface';
 import * as arcgis from 'terraformer-arcgis-parser';
 import { GeometryObject } from 'geojson';
-import { GeometryTypeEnum } from '../../arcgis/interfaces/arcgis-geometry.interface';
-import { GeometryModuleOptions, moduleOptions, TOKEN } from '../../token';
+import {  moduleOptions } from '../../token';
+import { GeometryTypeEnum } from '../arcgis';
 @Injectable()
 export class ProjectGeometryService {
   get options(){

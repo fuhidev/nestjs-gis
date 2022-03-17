@@ -9,7 +9,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { SpatialReference } from '../arcgis';
+import { SpatialReference } from '../geometry/arcgis';
 import { ImportExcelService } from './import-excel.service';
 
 @Controller('gis/import-excel')

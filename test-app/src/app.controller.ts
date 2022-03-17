@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
-import { ColumnOptions } from 'typeorm';
+import { ColumnOptions, TableColumn } from 'typeorm';
+import { TableOptions } from 'typeorm/schema-builder/options/TableOptions';
 import { AppService } from './app.service';
 
 @Controller()
@@ -21,15 +22,21 @@ export class AppController {
   }
 
   @Post('createtable')
-  createTable(@Body() table) {
+  createTable(@Body() table: TableOptions & { tableType?: 'gis' }) {
+    !table.columns && (table.columns = [])
     return this.appService.createTable(table);
   }
 
   @Post('addColumn/:tableName')
-  addColumn(
-    @Body() column,
-    @Param('tableName') tableName: string,
-  ) {
+  addColumn(@Body() column, @Param('tableName') tableName: string) {
     return this.appService.addColumn({ tableName, column });
+  }
+
+  @Post('syncColumn/:tableName')
+  syncColumn(
+    @Body() columns: Array<TableColumn>,
+    @Param('tableName') table: string,
+  ) {
+    return this.appService.syncColumn({ table, columns });
   }
 }

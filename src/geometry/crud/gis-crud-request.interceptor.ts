@@ -7,7 +7,7 @@ import {
 import { CrudRequestInterceptor } from '@nestjsx/crud';
 import { PARSED_CRUD_REQUEST_KEY } from '@nestjsx/crud/lib/constants';
 import { GISCrudRequest } from 'src/geometry';
-import { moduleOptions } from '../token';
+import { moduleOptions } from '../../token';
 
 @Injectable()
 export class GISCrudRequestInterceptor extends CrudRequestInterceptor

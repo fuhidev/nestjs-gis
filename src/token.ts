@@ -1,4 +1,4 @@
-import { SpatialReference } from './arcgis';
+import { SpatialReference } from './geometry/arcgis';
 
 export interface GeometryModuleOptions {
   srs: SpatialReference;

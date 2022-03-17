@@ -14,8 +14,8 @@ import {
   GISCrudRequest,
   GISParsedRequestParams,
 } from './typeorm.interface';
-import { SpatialReference } from '../arcgis/interfaces/spatial-reference';
-import { GeometryTypeEnum } from '../arcgis/interfaces/arcgis-geometry.interface';
+import { SpatialReference } from '../geometry/arcgis/interfaces/spatial-reference';
+import { GeometryTypeEnum } from '../geometry/arcgis/interfaces/arcgis-geometry.interface';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { ProjectGeometryService } from '../geometry/project-geometry/project-geometry.service';
 import { moduleOptions } from '../token';
