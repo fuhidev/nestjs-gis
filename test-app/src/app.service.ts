@@ -47,7 +47,7 @@ export class AppService {
         await runner.createTable(table, true);
         return {
           message: 'Tạo thành công table ' + p.name,
-          table :await runner.getTable(table.name),
+          table: await runner.getTable(table.name),
         };
       } catch (error) {
         throw new BadRequestException(
@@ -59,50 +59,60 @@ export class AppService {
     });
   }
 
-  syncColumn(p: { table: string; columns: TableColumn[] }) {
-    return this.withQueryRunner(async runner => {
-      const baseColumns = await this.getColumns(p.table);
-      const dropColumns: string[] = [];
-      const addColumns: TableColumn[] = [];
-      const alterColumn: TableColumn[] = [];
-      baseColumns.forEach(baseCol => {
-        if (!p.columns.some(col => col.name === baseCol.name)) {
-          dropColumns.push(baseCol.name);
-        } else {
-          const col = p.columns.find(f => f.name === baseCol.name);
-          if (col.type !== baseCol.type || col.length !== baseCol.length) {
-            alterColumn.push(col);
+  async syncColumn(p: { table: string; columns: TableColumn[] }) {
+    return await this.withQueryRunner(async runner => {
+      try {
+        const baseColumns = await this.getColumns(p.table);
+        const dropColumns: string[] = [];
+        const addColumns: TableColumn[] = [];
+        const alterColumn: TableColumn[] = [];
+        p.columns.forEach(col => new TableColumn(col));
+        baseColumns.forEach(baseCol => {
+          if (!p.columns.some(col => col.name === baseCol.name)) {
+            dropColumns.push(baseCol.name);
+          } else {
+            const col = p.columns.find(f => f.name === baseCol.name);
+            if (
+              col.type !== baseCol.type ||
+              col.length !== baseCol.length ||
+              col.isNullable !== baseCol.isNullable
+            ) {
+              alterColumn.push(col);
+            }
           }
-        }
-      });
-      p.columns.forEach(col => {
-        if (!baseColumns.some(baseCol => col.name === baseCol.name)) {
-          addColumns.push(col);
-        }
-      });
+        });
+        p.columns.forEach(col => {
+          if (!baseColumns.some(baseCol => col.name === baseCol.name)) {
+            addColumns.push(col);
+          }
+        });
 
-      const promises = [];
+        const promises = [];
 
-      promises.push(runner.dropColumns(p.table, dropColumns));
+        promises.push(runner.dropColumns(p.table, dropColumns));
 
-      promises.push(runner.addColumns(p.table, addColumns));
+        promises.push(runner.addColumns(p.table, addColumns));
 
-      promises.push(
-        runner.changeColumns(
-          p.table,
-          alterColumn.map(col => ({
-            oldColumn: col,
-            newColumn: col,
-          })),
-        ),
-      );
+        promises.push(
+          runner.changeColumns(
+            p.table,
+            //@ts-ignore
+            alterColumn.map(col => ({
+              oldColumn: col.name,
+              newColumn: col,
+            })),
+          ),
+        );
 
-      await Promise.all(promises);
+        await Promise.all(promises);
 
-      return {
-        message: 'Cập nhật thành công',
-        columns: await this.getColumns(p.table),
-      };
+        return {
+          message: 'Cập nhật thành công',
+          columns: await this.getColumns(p.table),
+        };
+      } catch (error) {
+        throw error;
+      }
     });
   }
 
@@ -118,7 +128,7 @@ export class AppService {
   }) {
     return this.withQueryRunner(async runner => {
       await runner.addColumn(p.tableName, p.column);
-      return { column: p.column };
+      return { column: new TableColumn(p.column) };
     });
   }
 
@@ -127,6 +137,26 @@ export class AppService {
       await runner.dropColumn(p.table, p.column);
       return {
         message: `Xóa thành công column ${p.column} của table ${p.table}`,
+      };
+    });
+  }
+  changeColumn(p: {
+    table: string;
+    oldColumn: string;
+    newColumn: TableColumn;
+  }) {
+    return this.withQueryRunner(async runner => {
+      await runner.changeColumn(p.table, p.oldColumn, p.newColumn);
+      return {
+        message: `Cập nhật column ${p.newColumn.name} thành công`,
+      };
+    });
+  }
+  renameColumn(p: { table: string; oldColumn: string; newColumn: string }) {
+    return this.withQueryRunner(async runner => {
+      await runner.renameColumn(p.table, p.oldColumn, p.newColumn);
+      return {
+        message: `Đổi tên thành công`,
       };
     });
   }
@@ -183,6 +213,8 @@ export class AppService {
     const queryRunner = this.con.createQueryRunner();
     try {
       return await callback(queryRunner);
+    } catch (error) {
+      throw new BadRequestException(error);
     } finally {
       await queryRunner.release();
     }

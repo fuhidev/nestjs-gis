@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ColumnOptions, TableColumn } from 'typeorm';
 import { TableOptions } from 'typeorm/schema-builder/options/TableOptions';
 import { AppService } from './app.service';
@@ -23,7 +31,7 @@ export class AppController {
 
   @Post('createtable')
   createTable(@Body() table: TableOptions & { tableType?: 'gis' }) {
-    !table.columns && (table.columns = [])
+    !table.columns && (table.columns = []);
     return this.appService.createTable(table);
   }
 
@@ -31,12 +39,24 @@ export class AppController {
   addColumn(@Body() column, @Param('tableName') tableName: string) {
     return this.appService.addColumn({ tableName, column });
   }
+  @Delete('dropColumn/:tableName/:columnName')
+  dropColumn(
+    @Param('columnName') columnName: string,
+    @Param('tableName') tableName: string,
+  ) {
+    return this.appService.dropColumn({ table: tableName, column: columnName });
+  }
 
-  @Post('syncColumn/:tableName')
+  @Patch('syncColumn/:tableName')
   syncColumn(
     @Body() columns: Array<TableColumn>,
     @Param('tableName') table: string,
   ) {
     return this.appService.syncColumn({ table, columns });
+  }
+
+  @Get('columndatatype')
+  getColumnDataType() {
+    return this.appService.getColumnType();
   }
 }
