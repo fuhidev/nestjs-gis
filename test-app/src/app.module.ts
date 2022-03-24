@@ -70,6 +70,7 @@ const dbConfig: SqlServerConnectionOptions = {
       jwt: {
         secret: 'hieu ',
       },
+      host:'http://localhost:3000'
     }),
 
     DynamicRestModule.fromSys({

@@ -13,14 +13,17 @@ import {
   RestEntity,
   RestEntityColumn,
 } from './dynamic-rest.interface';
+import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerConnectionOptions';
 
 export async function generateDynamicSysRest(
   options: DynamicRestFromSysOptions,
 ) {
-    const con =await  createConnection(options.dbConfig as ConnectionOptions);
+  const dbConfig = options.dbConfig as SqlServerConnectionOptions;
+  const con = await createConnection({
+    ...dbConfig,name:'tmpfromsys'
+  });
   const restEntities = await convertSysLayer2RestEntities({
-    // dbName: options.sysDbName,
-    con 
+    con,
   });
   con.close();
   return generateDynamicRest({
@@ -29,28 +32,29 @@ export async function generateDynamicSysRest(
   });
 }
 
-export async function convertSysLayer2RestEntities(p: { con:Connection }) {
+export async function convertSysLayer2RestEntities(p: { con: Connection }) {
   const { con } = p;
-  
+
   const runner = con.createQueryRunner();
   const restEntities: Array<RestEntity> = [];
   try {
-      const builder = con.createQueryBuilder(runner);
-      const layerEntities:Array<LayerEntity> =   await builder.clone().from('SYS_Layer','lyr')
+    const builder = con.createQueryBuilder(runner);
+    const layerEntities: Array<LayerEntity> = await builder
+      .clone()
+      .from('SYS_Layer', 'lyr')
       .where('lyr.isAPI = 1')
-      .select([
-          'layerId = lyr.layerId',
-          'url = lyr.url'
-      ]).getRawMany();
+      .select(['layerId = lyr.layerId', 'url = lyr.url'])
+      .getRawMany();
     for (const layer of layerEntities) {
       if (await runner.hasTable(layer.layerId)) {
         const restEntityColumns: RestEntityColumn[] = [];
         const table = await runner.getTable(layer.layerId);
-        const columnEntities:Array<SYSColumnEntity> = await builder.clone().from('SYS_Column','col')
-        .where('col.table=:table',{table:layer.layerId})
-        .select(
-            ['col.alias','col.isDisplay']
-        ).getRawMany()
+        const columnEntities: Array<SYSColumnEntity> = await builder
+          .clone()
+          .from('SYS_Column', 'col')
+          .where('col.table=:table', { table: layer.layerId })
+          .select(['col.alias', 'col.isDisplay'])
+          .getRawMany();
         table.columns.forEach(tableColumn => {
           const columnEntity = columnEntities.find(
             f => f.column === tableColumn.name,
