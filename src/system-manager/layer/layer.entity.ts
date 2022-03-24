@@ -35,6 +35,8 @@ export class LayerEntity {
 
   @Column({ name: 'Url', type: 'nvarchar', length: 500, nullable: true })
   url: string;
+  @Column({ name: 'IsAPI', type: 'bit', default: false, nullable: true })
+  isApi: boolean;
 
   @OneToMany(() => RoleLayerEntity, e => e.layer)
   roles: RoleLayerEntity[];

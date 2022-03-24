@@ -12,7 +12,6 @@ import { __decorate, __metadata, __param } from './dynamic-rest.util';
 import { geometryTransformer } from '../geometry/transformer/geometry.transformer';
 import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import { Column } from '../typeorm/decorators/column';
-import { JwtAuthGuard } from '../system-manager/auth/jwt-auth.guard';
 
 export function generateDynamicRest(options: DynamicRestOptions) {
   const { restEntities } = options;

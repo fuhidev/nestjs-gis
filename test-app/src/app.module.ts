@@ -20,22 +20,25 @@ import {
   getRepository,
   Repository,
 } from 'typeorm';
+import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
+import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerConnectionOptions';
+
+const dbConfig: SqlServerConnectionOptions = {
+  options: { encrypt: false },
+  type: 'mssql',
+  host: '171.244.32.245',
+  port: 1433,
+  username: 'sa',
+  password: 'Ditagis123',
+  database: 'NinhThuan_TaiNguyenBien',
+  synchronize: false,
+  logging: false,
+  entities: ['dist/**/*.entity{.ts,.js}', ...systemEntities],
+};
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      options: { encrypt: false },
-      keepConnectionAlive: true,
-      type: 'mssql',
-      host: '171.244.32.245',
-      port: 1433,
-      username: 'sa',
-      password: 'Ditagis123',
-      database: 'NinhThuan_TaiNguyenBien',
-      synchronize: false,
-      logging: false,
-      entities: ['dist/**/*.entity{.ts,.js}', ...systemEntities],
-    }),
+    TypeOrmModule.forRoot(dbConfig),
     // TaiNguyenBienModule,
     GeometryModule.forRoot({
       srs: {
@@ -68,6 +71,11 @@ import {
         secret: 'hieu ',
       },
     }),
+
+    DynamicRestModule.fromSys({
+      dbConfig:{...dbConfig,name:'fromsys'},
+    }),
+
     // DynamicRestModule.forRoot({
     //   dbConfig: {
     //     options: { encrypt: false },
@@ -92,149 +100,153 @@ import {
     //     },
     //   ]
     // }),
-    DynamicRestModule.forRoot({
-      dbConfig: {
-        options: { encrypt: false },
-        // keepConnectionAlive: true,
-        name:'restmodule',
-        type: 'mssql',
-        host: '171.244.32.245',
-        port: 1433,
-        username: 'sa',
-        password: 'Ditagis123',
-        database: 'NinhThuan_TaiNguyenBien',
-        synchronize: false,
-      },
-      restEntities: [
-        {
-          path: 'rest/dm-loai-cang',
-          tableName: 'CangBien_DM_Loai',
-          columns: [
-            {
-              propertyName: 'code',
-              type: 'nvarchar',
-              primary: true,
-              alias: 'Mã',
-            },
-            {
-              propertyName: 'value',
-              type: 'nvarchar',
-              isDisplayColumn: true,
-              alias: 'Giá trị',
-            },
-          ],
-        },
-        {
-          path: 'rest/cang-bien',
-          tableName: 'CangBien',
-          columns: [
-            { propertyName: 'objectId', type: 'int', primary: true },
-            {
-              propertyName: 'ten',
-              type: 'nvarchar',
-              isDisplayColumn: true,
-              alias: 'Tên',
-            },
-            {
-              propertyName: 'maLoai',
-              type: 'nvarchar',
-              name: 'Loai',
-              alias: 'Loại cảng biển',
-            },
-            {
-              propertyName: 'loai',
-              join: {
-                type: 'many-to-one',
-                target: 'CangBien_DM_Loai',
-                joinColumn: {
-                  name: 'Loai',
-                },
-              },
-            },
-            { propertyName: 'dienTich', type: 'decimal', alias: 'Diện tích' },
-            { propertyName: 'congSuat', type: 'decimal', alias: 'Công suất' },
-            { propertyName: 'moTa', type: 'nvarchar', alias: 'Mô tả' },
-            {propertyName:'shape',spatialFeatureType:GeometryTypeEnum.Polygon,type:'geometry'}
-          ],
-        },
-        {
-          path: 'rest/dm-cap-di-tich',
-          tableName: 'DiTich_DM_CapDiTich',
-          columns: [
-            {
-              propertyName: 'code',
-              name: 'Code',
-              type: 'nvarchar',
-              primary: true,
-            },
-            {
-              propertyName: 'value',
-              name: 'Value',
-              type: 'nvarchar',
-            },
-          ],
-        },
-        {
-          path: 'rest/di-tich',
-          tableName: 'DITICH',
-          // decorators:[UseGuards(JwtAuthGuard)],
-          // crudOptions:{
-          //   routes:{
-          //     getManyBase:{
-          //       decorators:[UseGuards(JwtAuthGuard)]
-          //     }
-          //   }
-          // },
-          columns: [
-            {
-              propertyName: 'objectId',
-              name: 'OBJECTID',
-              type: 'int',
-              primary: true,
-            },
-            {
-              propertyName: 'maCap',
-              name: 'CAP',
-              type: 'varchar',
-            },
-            {
-              propertyName: 'cap',
-              join: {
-                target: 'DiTich_DM_CapDiTich',
-                joinColumn: {
-                  name: 'CAP',
-                },
-                type: 'many-to-one',
-              },
-            },
-            {
-              propertyName: 'shape',
-              name: 'SHAPE',
-              type: 'geometry',
-              spatialFeatureType: GeometryTypeEnum.Point,
-            },
-          ],
-        },
-        {
-          path: 'rest/dam-pha-ven-bien',
-          tableName: 'DAMPHAVENBIEN',
-          columns: [
-            {
-              propertyName: 'objectId',
-              name: 'OBJECTID',
-              type: 'int',
-              primary: true,
-            },
-            {
-              propertyName: 'shape',
-              name: 'SHAPE',
-              type: 'geometry',
-              spatialFeatureType: GeometryTypeEnum.Polygon,
-            },
-          ],
-        },
-      ],
-    }),
+    // DynamicRestModule.forRoot({
+    //   dbConfig: {
+    //     options: { encrypt: false },
+    //     // keepConnectionAlive: true,
+    //     name: 'restmodule',
+    //     type: 'mssql',
+    //     host: '171.244.32.245',
+    //     port: 1433,
+    //     username: 'sa',
+    //     password: 'Ditagis123',
+    //     database: 'NinhThuan_TaiNguyenBien',
+    //     synchronize: false,
+    //   },
+    //   restEntities: [
+    //     {
+    //       path: 'rest/dm-loai-cang',
+    //       tableName: 'CangBien_DM_Loai',
+    //       columns: [
+    //         {
+    //           propertyName: 'code',
+    //           type: 'nvarchar',
+    //           primary: true,
+    //           alias: 'Mã',
+    //         },
+    //         {
+    //           propertyName: 'value',
+    //           type: 'nvarchar',
+    //           isDisplayColumn: true,
+    //           alias: 'Giá trị',
+    //         },
+    //       ],
+    //     },
+    //     {
+    //       path: 'rest/cang-bien',
+    //       tableName: 'CangBien',
+    //       columns: [
+    //         { propertyName: 'objectId', type: 'int', primary: true },
+    //         {
+    //           propertyName: 'ten',
+    //           type: 'nvarchar',
+    //           isDisplayColumn: true,
+    //           alias: 'Tên',
+    //         },
+    //         {
+    //           propertyName: 'maLoai',
+    //           type: 'nvarchar',
+    //           name: 'Loai',
+    //           alias: 'Loại cảng biển',
+    //         },
+    //         {
+    //           propertyName: 'loai',
+    //           join: {
+    //             type: 'many-to-one',
+    //             target: 'CangBien_DM_Loai',
+    //             joinColumn: {
+    //               name: 'Loai',
+    //             },
+    //           },
+    //         },
+    //         { propertyName: 'dienTich', type: 'decimal', alias: 'Diện tích' },
+    //         { propertyName: 'congSuat', type: 'decimal', alias: 'Công suất' },
+    //         { propertyName: 'moTa', type: 'nvarchar', alias: 'Mô tả' },
+    //         {
+    //           propertyName: 'shape',
+    //           spatialFeatureType: GeometryTypeEnum.Polygon,
+    //           type: 'geometry',
+    //         },
+    //       ],
+    //     },
+    //     {
+    //       path: 'rest/dm-cap-di-tich',
+    //       tableName: 'DiTich_DM_CapDiTich',
+    //       columns: [
+    //         {
+    //           propertyName: 'code',
+    //           name: 'Code',
+    //           type: 'nvarchar',
+    //           primary: true,
+    //         },
+    //         {
+    //           propertyName: 'value',
+    //           name: 'Value',
+    //           type: 'nvarchar',
+    //         },
+    //       ],
+    //     },
+    //     {
+    //       path: 'rest/di-tich',
+    //       tableName: 'DITICH',
+    //       // decorators:[UseGuards(JwtAuthGuard)],
+    //       // crudOptions:{
+    //       //   routes:{
+    //       //     getManyBase:{
+    //       //       decorators:[UseGuards(JwtAuthGuard)]
+    //       //     }
+    //       //   }
+    //       // },
+    //       columns: [
+    //         {
+    //           propertyName: 'objectId',
+    //           name: 'OBJECTID',
+    //           type: 'int',
+    //           primary: true,
+    //         },
+    //         {
+    //           propertyName: 'maCap',
+    //           name: 'CAP',
+    //           type: 'varchar',
+    //         },
+    //         {
+    //           propertyName: 'cap',
+    //           join: {
+    //             target: 'DiTich_DM_CapDiTich',
+    //             joinColumn: {
+    //               name: 'CAP',
+    //             },
+    //             type: 'many-to-one',
+    //           },
+    //         },
+    //         {
+    //           propertyName: 'shape',
+    //           name: 'SHAPE',
+    //           type: 'geometry',
+    //           spatialFeatureType: GeometryTypeEnum.Point,
+    //         },
+    //       ],
+    //     },
+    //     {
+    //       path: 'rest/dam-pha-ven-bien',
+    //       tableName: 'DAMPHAVENBIEN',
+    //       columns: [
+    //         {
+    //           propertyName: 'objectId',
+    //           name: 'OBJECTID',
+    //           type: 'int',
+    //           primary: true,
+    //         },
+    //         {
+    //           propertyName: 'shape',
+    //           name: 'SHAPE',
+    //           type: 'geometry',
+    //           spatialFeatureType: GeometryTypeEnum.Polygon,
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // }),
     // DynamicRestModule.forRoot({
     //   dbConfig: {
     //     options: { encrypt: false },
