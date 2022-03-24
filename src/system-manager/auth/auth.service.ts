@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { compareSync } from 'bcrypt';
 import { EntityManager, getRepository } from 'typeorm';
+import { systemManagerOption } from '../system-manager.token';
 import { UserStatusEnum } from '../user/user.constant';
 import { UserEntity } from '../user/user.entity';
 import { UserService } from '../user/user.service';
@@ -128,6 +129,7 @@ export class AuthService {
         'isDelete=lyrs.isDelete',
         'isEdit=lyrs.isEdit',
         'stt = lr.stt',
+        'isApi = lr.isAPI',
         'definition=lyrs.definition',
         'url=lr.url',
         'outFields = lyrs.outFields',
@@ -135,21 +137,25 @@ export class AuthService {
         'updateFields = lyrs.updateFields',
         'datasetId=dts.datasetId',
         'datasetName=dts.datasetName',
-        'datasetStt = dts.stt'
+        'datasetStt = dts.stt',
       ])
-      .orderBy('dts.stt','ASC')
-      .addOrderBy('lr.stt','ASC')
+      .orderBy('dts.stt', 'ASC')
+      .addOrderBy('lr.stt', 'ASC')
       .getRawMany();
     result.forEach(r => {
+      if (r.isApi) {
+        r.url = systemManagerOption.host + '/' + r.url;
+      }
       r.dataset = {
         datasetId: r.datasetId,
         datasetName: r.datasetName,
-        stt:r.datasetStt
+        stt: r.datasetStt,
       };
       r.isVisible = true;
       delete r.datasetId;
       delete r.datasetName;
       delete r.datasetStt;
+      delete r.isApi;
     });
     return result;
     // return user.role.layers.forEach((roleLayer) => {
