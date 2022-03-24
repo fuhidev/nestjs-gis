@@ -20,6 +20,7 @@ import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { ProjectGeometryService } from '../geometry/project-geometry/project-geometry.service';
 import { moduleOptions } from '../token';
 import { BadRequestException } from '@nestjs/common';
+import { SpatialMethodEnum } from './typeorm.interface';
 
 export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
   protected geometryService = new ProjectGeometryService();
@@ -88,10 +89,16 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     geoFilter = geometries[0];
     let wktGeo = wkt.convert(arcgis.parse(geoFilter));
     if (wktGeo) {
+      const stMethod =
+        filterGeo.method === SpatialMethodEnum.Within
+          ? 'STWithin'
+          : filterGeo.method === SpatialMethodEnum.Touches
+          ? 'STTouches'
+          : 'STIntersects';
       const alias = pAlias ? pAlias + '.' : '';
       const where = `${alias}${
         geoColumn.propertyName
-      }.STIntersects('${wktGeo}') = 1`;
+      }.${stMethod}('${wktGeo}') = 1`;
       if (builder.getSql().search('WHERE') === -1) builder.where(where);
       else builder.andWhere(where);
     }

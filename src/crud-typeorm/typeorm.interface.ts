@@ -5,9 +5,10 @@ import { BaseEntity } from 'typeorm';
 import { Geometry } from 'terraformer-arcgis-parser';
 import { SpatialReference } from '../geometry';
 
-export interface FilterGeoBody{
+export interface FilterGeoBody {
   geometry: Geometry | GeoJSON.GeometryObject;
-  fGeo?:'geojson' | 'esri'
+  fGeo?: 'geojson' | 'esri';
+  method?: SpatialMethodEnum;
 }
 
 export interface GISParsedRequestParams extends ParsedRequestParams {
@@ -15,7 +16,7 @@ export interface GISParsedRequestParams extends ParsedRequestParams {
   bbox?: Envelope;
   filterGeo?: FilterGeoBody;
   fGeo?: 'geojson' | 'esri';
-  inSR?:SpatialReference  | number;
+  inSR?: SpatialReference | number;
 }
 
 export interface GISCrudRequest extends CrudRequest {
@@ -24,4 +25,10 @@ export interface GISCrudRequest extends CrudRequest {
 
 export class GISEntity extends BaseEntity {
   objectId: number;
+}
+
+export enum SpatialMethodEnum {
+  Within = 'within',
+  Intersects = 'intersects',
+  Touches = 'touches',
 }
