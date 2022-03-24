@@ -1,5 +1,4 @@
 export * from './system-manager.module'
-export * from './system-manager.constant'
 export * from './application'
 export * from './application-group'
 export * from './auth'

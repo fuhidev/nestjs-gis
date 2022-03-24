@@ -26,6 +26,8 @@ export class SYSColumnEntity {
   @Column({
     name: 'ID',
     nullable: true,
+    primary: true,
+    generated: 'increment',
   })
   id: number;
 
@@ -35,6 +37,6 @@ export class SYSColumnEntity {
   alias: string;
   @Column({ name: 'Column' })
   column: string;
-  @Column({name:'IsDisplay'})
+  @Column({ name: 'IsDisplay' })
   isDisplay: boolean;
 }
