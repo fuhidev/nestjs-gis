@@ -5,11 +5,13 @@ import {
   BeforeInsert,
   JoinColumn,
   ManyToOne,
+  TableColumn,
 } from 'typeorm';
 import { LayerEntity } from '../layer/layer.entity';
 import { CodedDomainEntity } from '../coded-domain/coded-domain.entity';
+import { TableColumnOptions } from 'typeorm/schema-builder/options/TableColumnOptions';
 
-export class ColumnEntity {
+export interface ColumnEntity {
   id: string;
   name: string;
   alias: string;
@@ -20,7 +22,6 @@ export class ColumnEntity {
   layerId: string;
   layer: LayerEntity;
 }
-
 @Entity('SYS_Column', { synchronize: false })
 export class SYSColumnEntity {
   @Column({
@@ -39,4 +40,21 @@ export class SYSColumnEntity {
   column: string;
   @Column({ name: 'IsDisplay' })
   isDisplay: boolean;
+}
+
+export interface TableSysColumnOptions extends TableColumnOptions {
+  alias?: string;
+  isDisplay?: boolean;
+}
+
+export class TableSysColumn extends TableColumn {
+  alias?: string;
+  isDisplay?: boolean = false;
+  constructor(options?: TableSysColumnOptions) {
+    super(options);
+    if (options) {
+      this.alias = options.alias || options.name;
+      this.isDisplay = Boolean(options.isDisplay);
+    }
+  }
 }
