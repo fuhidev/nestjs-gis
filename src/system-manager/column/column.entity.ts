@@ -40,6 +40,10 @@ export class SYSColumnEntity {
   column: string;
   @Column({ name: 'IsDisplay' })
   isDisplay: boolean;
+  @Column()
+  joinTable: string;
+  @Column()
+  joinType: string;
 }
 
 export interface TableSysColumnOptions extends TableColumnOptions {
