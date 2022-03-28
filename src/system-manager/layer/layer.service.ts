@@ -345,7 +345,9 @@ where
         p.columns.forEach(col => new TableSysColumn(col));
         baseColumns.forEach(baseCol => {
           if (!p.columns.some(col => col.name === baseCol.name)) {
-            dropColumns.push(baseCol.name);
+            // nếu là cột SHAPE thì không cần sync
+            if (!(baseCol.name === 'SHAPE' && baseCol.type === 'geometry'))
+              dropColumns.push(baseCol.name);
           } else {
             const col = p.columns.find(f => f.name === baseCol.name);
             if (
@@ -558,7 +560,7 @@ where
     );
     // nếu hiện tại lớp là table chuyển thành geometryTable
     // thì thêm cột SHAPE và cập nhật geometryType của SYS_Layer
-    if (!layer.geometryType && geometryType) {
+    if (geometryType) {
       if (!hasGeometryCol) {
         await this.addColumn({
           tableName: layerId,
@@ -569,33 +571,45 @@ where
           }),
         });
       }
-      await this.repo.update(layerId, { geometryType });
-      return {
-        message: `Đã chuyển đổi ${layerId} từ geometry sang geometry table`,
-      };
-    }
+      if (!layer.geometryType) {
+        await this.repo.update(layerId, { geometryType });
+        return {
+          message: `Đã chuyển đổi ${layerId} từ geometry sang geometry table`,
+        };
+      }
 
-    // nếu hiện tại lớp là geometryTable chỉ đổi cấu trúc không gian
-    // thì xóa hết dữ liệu cột SHAPE và cập nhật geometryType của SYS_Layer
-    else if (
-      layer.geometryType &&
-      geometryType &&
-      layer.geometryType !== geometryType
-    ) {
-      if (hasGeometryCol)
-        await this.repo.manager
-          .createQueryBuilder()
-          .update(layerId)
-          .set({ SHAPE: null })
-          .execute();
-      await this.repo.update(layerId, { geometryType });
-      return {
-        message: `Đã chuyển đổi ${layerId} từ ${
-          layer.geometryType
-        } sang ${geometryType}, thuộc tính không gian đã bị xóa hết dữ liệu`,
-      };
-    }
+      // nếu hiện tại lớp là geometryTable chỉ đổi cấu trúc không gian
+      // thì xóa hết dữ liệu cột SHAPE và cập nhật geometryType của SYS_Layer
+      else if (layer.geometryType && layer.geometryType !== geometryType) {
+        if (hasGeometryCol) {
+          const builder = this.repo.manager
+            .createQueryBuilder()
+            .update(layerId)
+            .set({ SHAPE: null });
 
+          let sqlGeoType: string[] = [];
+          if (geometryType === GeometryTypeEnum.Point) {
+            sqlGeoType.push('Point', 'MultiPoint');
+          } else if (geometryType === GeometryTypeEnum.Polygon) {
+            sqlGeoType.push('Polygon', 'MultiPolygon');
+          } else if (geometryType === GeometryTypeEnum.Polyline) {
+            sqlGeoType.push('LineString', 'MultiLineString');
+          }
+          builder.where(
+            `SHAPE.STGeometryType() not in (${sqlGeoType
+              .map(geo => `'${geo}'`)
+              .join(',')})`,
+          );
+          await builder.execute();
+        }
+        await this.repo.update(layerId, { geometryType });
+        return {
+          message: `Đã chuyển đổi ${layerId} từ ${
+            layer.geometryType
+          } sang ${geometryType}, thuộc tính không gian đã bị xóa hết dữ liệu`,
+        };
+      }
+    }
     // nếu hiện tại lớp là geometryTable chuyển đổi thành table
     // thì xóa cột SHAPE và cập nhật geometryType của SYS_Layer
     else if (layer.geometryType && !geometryType) {
