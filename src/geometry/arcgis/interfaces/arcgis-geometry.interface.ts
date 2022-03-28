@@ -6,8 +6,8 @@ export class Point implements arcgis.Geometry {
 }
 
 export enum GeometryTypeEnum {
-  Point = 'esriGeometryPoint',
-  MultiPoint = 'esriGeometryMultipoint',
-  Polyline = 'esriGeometryPolyline',
-  Polygon = 'esriGeometryPolygon',
+  Point = 'GeometryPoint',
+  MultiPoint = 'GeometryMultipoint',
+  Polyline = 'GeometryPolyline',
+  Polygon = 'GeometryPolygon',
 }

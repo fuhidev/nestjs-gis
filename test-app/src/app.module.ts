@@ -73,9 +73,9 @@ const dbConfig: SqlServerConnectionOptions = {
       host:'http://localhost:3000'
     }),
 
-    DynamicRestModule.fromSys({
-      dbConfig:{...dbConfig,name:'fromsys'},
-    }),
+    // DynamicRestModule.fromSys({
+    //   dbConfig:{...dbConfig,name:'fromsys'},
+    // }),
 
     // DynamicRestModule.forRoot({
     //   dbConfig: {

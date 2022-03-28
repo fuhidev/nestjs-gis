@@ -27,6 +27,7 @@ import * as _ from 'lodash';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TableColumn } from 'typeorm';
 import { TableOptions } from 'typeorm/schema-builder/options/TableOptions';
+import { GeometryTypeEnum } from '../../geometry';
 
 @UseGuards(JwtAuthGuard)
 @Crud({
@@ -189,5 +190,26 @@ export class LayerController {
       table,
       columnDisplay: body.columnDisplay,
     });
+  }
+
+  @Patch('geometryType/:layerId')
+  changeGeometryType(
+    @Param('layerId') layerId: string,
+    @Body('geometryType') geometryType: GeometryTypeEnum,
+  ) {
+    if (
+      [
+        GeometryTypeEnum.Point,
+        GeometryTypeEnum.Polygon,
+        GeometryTypeEnum.Polyline,
+        null,
+      ].indexOf(geometryType) > -1
+    ) {
+      return this.service.changeGeometyType({ layerId, geometryType });
+    } else {
+      throw new BadRequestException(
+        'Chỉ chấp nhận geometryType mang giá trị esriGeometryPoint, esriGeometryPolyline, esriGeometryPolygon hoặc null',
+      );
+    }
   }
 }

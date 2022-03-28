@@ -1,7 +1,7 @@
 import { All, BadRequestException, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 import fetch, { RequestInit, Headers } from 'node-fetch';
-import { JwtAuthGuard } from '../../system-manager';
+import { JwtAuthGuard } from '../../system-manager/auth/jwt-auth.guard';
 import { getOption } from './arcgis-proxy-token';
 export class ArcgisProxyController {
   private tokens: {

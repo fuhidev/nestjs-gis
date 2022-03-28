@@ -7,18 +7,16 @@ import {
 } from './project-geometry.interface';
 import * as arcgis from 'terraformer-arcgis-parser';
 import { GeometryObject } from 'geojson';
-import {  moduleOptions } from '../../token';
+import { moduleOptions } from '../../token';
 import { GeometryTypeEnum } from '../arcgis';
 @Injectable()
 export class ProjectGeometryService {
-  get options(){
+  get options() {
     return moduleOptions;
   }
-  constructor(){
-
-  }
+  constructor() {}
   async projectGeojson(
-    params: ProjectGeometryGeojsonParams
+    params: ProjectGeometryGeojsonParams,
   ): Promise<{ geometries: GeometryObject[] }> {
     // chuyển cấu trúc geometry geojson > arcgis
     const { inSR, outSR, geometries } = params;
@@ -31,18 +29,18 @@ export class ProjectGeometryService {
         : firstGeo.type === 'Polygon'
         ? GeometryTypeEnum.Polygon
         : null;
-    const arcgisGeometries = geometries.map((geo) => arcgis.convert(geo));
+    const arcgisGeometries = geometries.map(geo => arcgis.convert(geo));
     const { geometries: arcgisGeoProj } = await this.project({
       geometries: arcgisGeometries,
       geometryType,
       inSR,
       outSR,
     });
-    const geojsonGeoProj = arcgisGeoProj.map((geo) => arcgis.parse(geo));
+    const geojsonGeoProj = arcgisGeoProj.map(geo => arcgis.parse(geo));
     return { geometries: geojsonGeoProj as any };
   }
   async project(
-    params: ProjectGeometryParams
+    params: ProjectGeometryParams,
   ): Promise<{ geometries: Geometry[] }> {
     const { inSR, outSR, geometries, geometryType } = params;
     if (geometries.length === 0) {
@@ -52,13 +50,15 @@ export class ProjectGeometryService {
       inSR: inSR || this.options.srs,
       outSR: outSR || this.options.srs,
       geometries: {
-        geometryType,
+        geometryType: 'esri' + geometryType,
         geometries,
       },
       f: 'json',
     });
 
-    const url = this.options.arcService + '/rest/services/Utilities/Geometry/GeometryServer/project';
+    const url =
+      this.options.arcService +
+      '/rest/services/Utilities/Geometry/GeometryServer/project';
     const response = await fetch(url, {
       method: 'POST',
       body: data,
@@ -71,9 +71,9 @@ export class ProjectGeometryService {
   }
 }
 
-export const encodeFormData = (data) => {
+export const encodeFormData = data => {
   return Object.keys(data)
-    .map((key) => {
+    .map(key => {
       let value = data[key];
       if (typeof value === 'object') {
         value = JSON.stringify(value);
