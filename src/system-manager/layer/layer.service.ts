@@ -541,7 +541,7 @@ where
   async changeGeometyType(p: {
     layerId: string;
     geometryType: GeometryTypeEnum | null;
-  }) {
+  }): Promise<{ message: string }> {
     const { layerId, geometryType } = p;
     await this.hasTableOrFailed({ tableName: layerId });
     const layer = await this.repo.findOne(layerId, {
@@ -607,7 +607,7 @@ where
       };
     }
     return {
-      mesage: 'Không có sự thay đổi',
+      message: 'Không có sự thay đổi',
     };
   }
 }
