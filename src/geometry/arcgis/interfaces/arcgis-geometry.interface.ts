@@ -10,4 +10,5 @@ export enum GeometryTypeEnum {
   MultiPoint = 'GeometryMultipoint',
   Polyline = 'GeometryPolyline',
   Polygon = 'GeometryPolygon',
+  Envelope = 'GeometryEnvelope'
 }

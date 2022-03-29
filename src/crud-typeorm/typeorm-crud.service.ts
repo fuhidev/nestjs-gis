@@ -121,7 +121,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
 
     const { geometries } = await this.geometryService.project({
       inSR: bbox.spatialReference,
-      geometryType: 'esriGeometryEnvelope' as any,
+      geometryType: GeometryTypeEnum.Envelope,
       geometries: [bbox],
     });
     const pGeo = geometries[0] as arcgis.Polygon;
