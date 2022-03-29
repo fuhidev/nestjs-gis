@@ -403,9 +403,9 @@ where
           ...p.column,
           alias: columnEntity.alias,
           isDisplay: columnEntity.isDisplay,
-          ai:columnEntity.ai,
-          joinTable:columnEntity.joinTable,
-          joinType:columnEntity.joinType
+          ai: columnEntity.ai,
+          joinTable: columnEntity.joinTable,
+          joinType: columnEntity.joinType,
         }),
       };
     });
@@ -443,12 +443,22 @@ where
           if ((newColumn as Object).hasOwnProperty('alias')) {
             updateEntity.alias = newColumn.alias;
           }
-          if ((newColumn as Object).hasOwnProperty('joinTable')) {
-            updateEntity.joinTable = newColumn.joinTable;
-          }
           if ((newColumn as Object).hasOwnProperty('joinType')) {
             updateEntity.joinType = newColumn.joinType;
           }
+          if ((newColumn as Object).hasOwnProperty('joinTable')) {
+            updateEntity.joinTable = newColumn.joinTable;
+            // nếu join table không được set giá trị thì joinType cũng không được set giá trị
+            // mặc joinType là many-to-one
+            if (updateEntity.joinTable) {
+              if (!updateEntity.joinType) {
+                updateEntity.joinType = 'many-to-one';
+              }
+            } else {
+              updateEntity.joinType = null;
+            }
+          }
+
           if (Object.keys(updateEntity).length) {
             await this.columnRepo.update(columnEntity, updateEntity);
           }
@@ -512,7 +522,7 @@ where
       'datetime2',
       'varchar',
       'nvarchar',
-      'uniqueidentifier'
+      'uniqueidentifier',
     ];
   }
 

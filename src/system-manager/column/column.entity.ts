@@ -1,12 +1,7 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
   Column,
-  BeforeInsert,
-  JoinColumn,
-  ManyToOne,
   TableColumn,
-  BeforeUpdate,
 } from 'typeorm';
 import { LayerEntity } from '../layer/layer.entity';
 import { CodedDomainEntity } from '../coded-domain/coded-domain.entity';
@@ -43,30 +38,16 @@ export class SYSColumnEntity {
   isDisplay: boolean;
   @Column()
   joinTable: string;
-  @Column()
-  joinType: string;
+  @Column({ type: 'nvarchar' })
+  joinType: 'one-to-one' | 'one-to-many' | 'many-to-one';
 
-  ai?:boolean;
-
-  @BeforeInsert()
-  @BeforeUpdate()
-  updateJoinTable() {
-    // nếu join table không được set giá trị thì joinType cũng không được set giá trị
-    // mặc joinType là many-to-one
-    if (this.joinTable) {
-      if (!this.joinType) {
-        this.joinType = 'many-to-one';
-      }
-    } else {
-      this.joinType = null;
-    }
-  }
+  ai?: boolean;
 }
 
 export interface TableSysColumnOptions extends TableColumnOptions {
   alias?: string;
   isDisplay?: boolean;
-  joinType?: string;
+  joinType?: 'one-to-one' | 'one-to-many' | 'many-to-one';
   joinTable?: string;
   ai?: boolean;
 }
@@ -75,7 +56,7 @@ export class TableSysColumn extends TableColumn {
   alias?: string;
   isDisplay?: boolean = false;
   joinTable?: string;
-  joinType?: string;
+  joinType?: 'one-to-one' | 'one-to-many' | 'many-to-one';
   constructor(options?: TableSysColumnOptions) {
     super(options);
     if (options) {

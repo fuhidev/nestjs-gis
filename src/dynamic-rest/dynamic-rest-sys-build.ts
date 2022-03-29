@@ -20,7 +20,8 @@ export async function generateDynamicSysRest(
 ) {
   const dbConfig = options.dbConfig as SqlServerConnectionOptions;
   const con = await createConnection({
-    ...dbConfig,name:'tmpfromsys'
+    ...dbConfig,
+    name: 'tmpfromsys',
   });
   const restEntities = await convertSysLayer2RestEntities({
     con,
@@ -53,8 +54,15 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
           .clone()
           .from('SYS_Column', 'col')
           .where('col.table=:table', { table: layer.layerId })
-          .select(['col.alias', 'col.isDisplay'])
+          .select([
+            'alias = col.alias',
+            'isDisplay = col.isDisplay',
+            'joinTable = col.joinTable',
+            'joinType = col.joinType',
+            '[column] = col.column',
+          ])
           .getRawMany();
+          
         table.columns.forEach(tableColumn => {
           const columnEntity = columnEntities.find(
             f => f.column === tableColumn.name,
@@ -67,6 +75,19 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
             type: tableColumn.type as ColumnType,
           };
           restEntityColumns.push(restEntityColumn);
+          console.log(columnEntity);
+          
+          if (columnEntity && columnEntity.joinTable && columnEntity.joinType) {
+            const restEntityJoinColumn: RestEntityColumn = {
+              propertyName: `join${tableColumn.name}`,
+              join: {
+                joinColumn: { name: tableColumn.name },
+                target: columnEntity.joinTable,
+                type: columnEntity.joinType,
+              },
+            };
+            restEntityColumns.push(restEntityJoinColumn);
+          }
         });
         const restEntity: RestEntity = {
           columns: restEntityColumns,
