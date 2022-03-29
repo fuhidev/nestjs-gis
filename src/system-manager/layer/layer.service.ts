@@ -354,7 +354,9 @@ where
               col.type !== baseCol.type ||
               col.length !== baseCol.length ||
               col.alias !== baseCol.alias ||
-              col.isNullable !== baseCol.isNullable
+              col.isNullable !== baseCol.isNullable ||
+              col.joinTable !== baseCol.joinTable ||
+              col.joinType !== baseCol.joinType
             ) {
               alterColumn.push(col);
             }
@@ -509,6 +511,7 @@ where
       'datetime2',
       'varchar',
       'nvarchar',
+      'uniqueidentifier'
     ];
   }
 
