@@ -178,7 +178,7 @@ export class RouteMedataFactory {
     if (geoCol) {
       result['geometryType'] =
         geoCol.spatialFeatureType &&
-        (geoCol.spatialFeatureType.replace('esriGeometry', '') as GeometryType);
+        (geoCol.spatialFeatureType.replace('Geometry', '') as GeometryType);
       const metadata = metadatas.find(
         f => f.propertyName === geoCol.propertyName,
       );
