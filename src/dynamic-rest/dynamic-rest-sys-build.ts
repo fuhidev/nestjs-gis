@@ -75,7 +75,6 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
             type: tableColumn.type as ColumnType,
           };
           restEntityColumns.push(restEntityColumn);
-          console.log(columnEntity);
           
           if (columnEntity && columnEntity.joinTable && columnEntity.joinType) {
             const restEntityJoinColumn: RestEntityColumn = {
