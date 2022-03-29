@@ -46,6 +46,8 @@ export class SYSColumnEntity {
   @Column()
   joinType: string;
 
+  ai?:boolean;
+
   @BeforeInsert()
   @BeforeUpdate()
   updateJoinTable() {

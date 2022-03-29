@@ -274,7 +274,7 @@ where
     return true;
   }
 
-  createTable(p: TableOptions & { tableType?: 'gis' }) {
+  createTable(p: TableOptions) {
     return this.withQueryRunner(async runner => {
       if (!p.columns.length) {
         throw new BadRequestException('Table phải có ít nhất một column');
@@ -289,16 +289,6 @@ where
         );
       }
       const table = new Table(p);
-      if (p.tableType === 'gis') {
-        table.addColumn(
-          new TableColumn({
-            type: 'geometry',
-            name: 'SHAPE',
-            isNullable: true,
-            comment: '',
-          }),
-        );
-      }
       try {
         await runner.createTable(table, true);
         return {
@@ -342,14 +332,14 @@ where
         const dropColumns: string[] = [];
         const addColumns: TableSysColumn[] = [];
         const alterColumn: TableSysColumn[] = [];
-        p.columns.forEach(col => new TableSysColumn(col));
+        columns.forEach(col => new TableSysColumn(col));
         baseColumns.forEach(baseCol => {
-          if (!p.columns.some(col => col.name === baseCol.name)) {
+          if (!columns.some(col => col.name === baseCol.name)) {
             // nếu là cột SHAPE thì không cần sync
             if (!(baseCol.name === 'SHAPE' && baseCol.type === 'geometry'))
               dropColumns.push(baseCol.name);
           } else {
-            const col = p.columns.find(f => f.name === baseCol.name);
+            const col = columns.find(f => f.name === baseCol.name);
             if (
               col.type !== baseCol.type ||
               col.length !== baseCol.length ||
@@ -362,7 +352,7 @@ where
             }
           }
         });
-        p.columns.forEach(col => {
+        columns.forEach(col => {
           if (!baseColumns.some(baseCol => col.name === baseCol.name)) {
             addColumns.push(col);
           }
@@ -413,6 +403,9 @@ where
           ...p.column,
           alias: columnEntity.alias,
           isDisplay: columnEntity.isDisplay,
+          ai:columnEntity.ai,
+          joinTable:columnEntity.joinTable,
+          joinType:columnEntity.joinType
         }),
       };
     });
@@ -449,6 +442,12 @@ where
           let updateEntity: Partial<SYSColumnEntity> = {};
           if ((newColumn as Object).hasOwnProperty('alias')) {
             updateEntity.alias = newColumn.alias;
+          }
+          if ((newColumn as Object).hasOwnProperty('joinTable')) {
+            updateEntity.joinTable = newColumn.joinTable;
+          }
+          if ((newColumn as Object).hasOwnProperty('joinType')) {
+            updateEntity.joinType = newColumn.joinType;
           }
           if (Object.keys(updateEntity).length) {
             await this.columnRepo.update(columnEntity, updateEntity);
@@ -490,6 +489,8 @@ where
           if (colEntity) {
             tableColumn.alias = colEntity.alias;
             tableColumn.isDisplay = colEntity.isDisplay;
+            tableColumn.joinTable = colEntity.joinTable;
+            tableColumn.joinType = colEntity.joinType;
           }
         });
       } catch (error) {
