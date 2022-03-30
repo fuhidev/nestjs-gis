@@ -26,11 +26,11 @@ import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerCo
 const dbConfig: SqlServerConnectionOptions = {
   options: { encrypt: false },
   type: 'mssql',
-  host: '171.244.32.245',
+  host: 'ditagis.com',
   port: 1433,
   username: 'sa',
   password: 'Ditagis123',
-  database: 'NinhThuan_TaiNguyenBien',
+  database: 'BINHTHUANGIS',
   synchronize: false,
   logging: false,
   entities: ['dist/**/*.entity{.ts,.js}', ...systemEntities],

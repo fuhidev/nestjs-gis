@@ -44,7 +44,11 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
       .clone()
       .from('SYS_Layer', 'lyr')
       .where('lyr.isAPI = 1')
-      .select(['layerId = lyr.layerId', 'url = lyr.url'])
+      .select([
+        'layerId = lyr.layerId',
+        'url = lyr.url',
+        'geometryType=lyr.geometryType',
+      ])
       .getRawMany();
     for (const layer of layerEntities) {
       if (await runner.hasTable(layer.layerId)) {
@@ -62,7 +66,7 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
             '[column] = col.column',
           ])
           .getRawMany();
-          
+
         table.columns.forEach(tableColumn => {
           const columnEntity = columnEntities.find(
             f => f.column === tableColumn.name,
@@ -74,8 +78,12 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
             primary: tableColumn.isPrimary,
             type: tableColumn.type as ColumnType,
           };
+          if (tableColumn.type === 'geometry') {
+            restEntityColumn.propertyName = 'shape';
+            restEntityColumn.spatialFeatureType = layer.geometryType;
+          }
           restEntityColumns.push(restEntityColumn);
-          
+
           if (columnEntity && columnEntity.joinTable && columnEntity.joinType) {
             const restEntityJoinColumn: RestEntityColumn = {
               propertyName: `join${tableColumn.name}`,
