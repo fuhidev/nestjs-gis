@@ -287,9 +287,16 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       // vì vậy phải sử dụng procedure của arcmap trong sql để lấy objectId
       if (objectIdCol && !objectIdCol.isGenerated) {
         try {
-          const result: Array<{ objectId: number }> = await this.repo
-            .query(`declare @rowid int
-            EXEC next_rowid 'dbo', '${
+          const result: Array<{ objectId: number }> = await this.repo.query(`
+            DECLARE @owner varchar(10)
+            SET @owner = (
+            select TOP 1 owner  from SDE_table_registry str where table_name ='${
+              this.repo.metadata.tableName
+            }'
+            )
+
+            declare @rowid int
+            EXEC next_rowid @owner, '${
               this.repo.metadata.tableName
             }' ,@rowid output
             select objectId = @rowid`);
