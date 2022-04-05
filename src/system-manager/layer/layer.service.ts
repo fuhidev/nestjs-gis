@@ -515,6 +515,7 @@ where
   getColumnType() {
     return [
       'int',
+      'smallint',
       'bigint',
       'decimal',
       'numeric',
