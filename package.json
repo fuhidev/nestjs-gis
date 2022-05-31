@@ -1,6 +1,6 @@
 {
   "name": "nestjs-gis",
-  "version": "3.8.6",
+  "version": "3.8.8",
   "description": "NestJS npm package starter",
   "author": "John Biundo <johnfbiundo@gmail.com>",
   "license": "MIT",
@@ -39,8 +39,8 @@
     "@nestjs/passport": ">=7.1.0",
     "@nestjsx/crud-typeorm": ">=4.6.0",
     "geojson": "^0.5.0",
-    "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.2.0",
+    "reflect-metadata": ">=0.1.13",
+    "rxjs": ">=7.2.0",
     "terraformer-arcgis-parser": "^1.1.0",
     "terraformer-wkt-parser": "^1.2.1",
     "typeorm": "^0.2.29",

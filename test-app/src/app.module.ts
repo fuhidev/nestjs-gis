@@ -26,11 +26,11 @@ import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerCo
 const dbConfig: SqlServerConnectionOptions = {
   options: { encrypt: false },
   type: 'mssql',
-  host: 'ditagis.com',
+  host: '171.244.32.245',
   port: 1433,
   username: 'sa',
   password: 'Ditagis123',
-  database: 'BINHTHUANGIS',
+  database: 'QuanLyHangHai',
   synchronize: false,
   logging: false,
   entities: ['dist/**/*.entity{.ts,.js}', ...systemEntities],
@@ -70,11 +70,11 @@ const dbConfig: SqlServerConnectionOptions = {
       jwt: {
         secret: 'hieu ',
       },
-      host:'http://localhost:3000'
+      host: 'http://localhost:3000',
     }),
 
     DynamicRestModule.fromSys({
-      dbConfig:{...dbConfig,name:'fromsys'},
+      dbConfig: { ...dbConfig, name: 'fromsys' },
     }),
 
     // DynamicRestModule.forRoot({

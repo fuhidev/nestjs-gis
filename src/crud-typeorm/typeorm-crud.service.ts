@@ -285,9 +285,37 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
 
       // nếu objectId không tự tạo giá trị có nghĩa objectId được tạo từ Arcmap
       // vì vậy phải sử dụng procedure của arcmap trong sql để lấy objectId
-      if (objectIdCol && !objectIdCol.isGenerated) {
+      if (objectIdCol) {
+        let isGenerated = false;
         try {
-          const result: Array<{ objectId: number }> = await this.repo.query(`
+          const response = await this.repo.manager
+            .createQueryBuilder()
+            .from('INFORMATION_SCHEMA.COLUMNS', 'i')
+            .select(
+              `COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity')`,
+              'value',
+            )
+            .where(
+              'i.TABLE_NAME = :tableName and i.COLUMN_NAME = :columnName',
+              {
+                tableName: this.repo.metadata.tableName,
+                columnName: objectIdCol.databaseName,
+              },
+            )
+            .getRawOne();
+          isGenerated = response.value;
+          if (isGenerated) {
+            objectIdCol.isGenerated = true;
+            objectIdCol.generationStrategy = 'increment';
+          }
+        } catch (error) {
+          throw new BadRequestException(
+            'Không xác định được IDENTITY của PRIMARY KEY',
+          );
+        }
+        if (!objectIdCol.isGenerated) {
+          try {
+            const result: Array<{ objectId: number }> = await this.repo.query(`
             DECLARE @owner varchar(10)
             SET @owner = (
             select TOP 1 owner  from SDE_table_registry str where table_name ='${
@@ -300,15 +328,16 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
               this.repo.metadata.tableName
             }' ,@rowid output
             select objectId = @rowid`);
-          if (result.length) {
-            const objectId = result[0].objectId;
-            //@ts-ignore
-            dto[objectIdCol.propertyName] = objectId;
+            if (result.length) {
+              const objectId = result[0].objectId;
+              //@ts-ignore
+              dto[objectIdCol.propertyName] = objectId;
+            }
+          } catch (error) {
+            throw new BadRequestException(
+              'Không lấy được objectId từ dữ liệu GIS',
+            );
           }
-        } catch (error) {
-          throw new BadRequestException(
-            'Không lấy được objectId từ dữ liệu GIS',
-          );
         }
       }
     }
