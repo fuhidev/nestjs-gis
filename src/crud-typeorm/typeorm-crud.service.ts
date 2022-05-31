@@ -493,9 +493,9 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         shape = arcgis.convert(shape);
       }
       // đổi hệ tọa độ
-      if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
+      if (!this.equalSrs(req.parsed.inSR, moduleOptions.srs)) {
         const { geometries } = await this.geometryService.project({
-          inSR: shape.spatialReference,
+          inSR: req.parsed.inSR,
           outSR: moduleOptions.srs,
           geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
           geometries: [shape],
