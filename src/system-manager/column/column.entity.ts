@@ -1,8 +1,4 @@
-import {
-  Entity,
-  Column,
-  TableColumn,
-} from 'typeorm';
+import { Entity, Column, TableColumn } from 'typeorm';
 import { LayerEntity } from '../layer/layer.entity';
 import { CodedDomainEntity } from '../coded-domain/coded-domain.entity';
 import { TableColumnOptions } from 'typeorm/schema-builder/options/TableColumnOptions';
