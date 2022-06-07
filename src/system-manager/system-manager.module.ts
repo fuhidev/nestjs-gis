@@ -26,7 +26,6 @@ import { DomainGroupModule } from './domain-group/domain-group.module';
 import { DomainGroupEntity } from './domain-group/domain-group.entity';
 import { DomainEntity } from './domain/domain.entity';
 import { SYSColumnEntity } from './column';
-import { MetadataModule } from './metadata/metadata.module';
 export const systemEntities = [
   UserEntity,
   UserStatusEntity,
@@ -63,7 +62,6 @@ export class SystemManagerModule {
         DesktopModule,
         RoleLayerModule,
         AuthModule,
-        MetadataModule,
       ],
     };
   }
