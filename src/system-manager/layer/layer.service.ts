@@ -282,6 +282,16 @@ where
       const primaryCol = p.columns.find(f => f.isPrimary);
       if (!primaryCol) {
         throw new BadRequestException('Table phải có một column là khóa chính');
+      } else {
+        if ((primaryCol as any).ai) {
+          primaryCol.isGenerated = true;
+          primaryCol.generationStrategy =
+            primaryCol.type === 'int'
+              ? 'increment'
+              : primaryCol.type === 'uniqueidentifier'
+              ? 'uuid'
+              : null;
+        }
       }
       if (p.columns.filter(f => f.isPrimary).length > 1) {
         throw new BadRequestException(
