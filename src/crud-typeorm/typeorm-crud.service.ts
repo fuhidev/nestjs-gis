@@ -1,26 +1,26 @@
-import { TypeOrmCrudService as BaseTypeOrmCrudService } from '@nestjsx/crud-typeorm';
-import * as arcgis from 'terraformer-arcgis-parser';
-import * as wkt from 'terraformer-wkt-parser';
-import { SelectQueryBuilder, Repository, DeepPartial, In } from 'typeorm';
+import { BadRequestException } from '@nestjs/common';
 import {
   CreateManyDto,
   CrudRequest,
   CrudRequestOptions,
   GetManyDefaultResponse,
 } from '@nestjsx/crud';
+import { TypeOrmCrudService as BaseTypeOrmCrudService } from '@nestjsx/crud-typeorm';
+import * as arcgis from 'terraformer-arcgis-parser';
 import { Geometry } from 'terraformer-arcgis-parser';
+import * as wkt from 'terraformer-wkt-parser';
+import { DeepPartial, In, Repository, SelectQueryBuilder } from 'typeorm';
+import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
+import { GeometryTypeEnum } from '../geometry/arcgis/interfaces/arcgis-geometry.interface';
+import { SpatialReference } from '../geometry/arcgis/interfaces/spatial-reference';
+import { ProjectGeometryService } from '../geometry/project-geometry/project-geometry.service';
+import { moduleOptions } from '../token';
 import {
   FilterGeoBody,
   GISCrudRequest,
   GISParsedRequestParams,
+  SpatialMethodEnum,
 } from './typeorm.interface';
-import { SpatialReference } from '../geometry/arcgis/interfaces/spatial-reference';
-import { GeometryTypeEnum } from '../geometry/arcgis/interfaces/arcgis-geometry.interface';
-import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
-import { ProjectGeometryService } from '../geometry/project-geometry/project-geometry.service';
-import { moduleOptions } from '../token';
-import { BadRequestException } from '@nestjs/common';
-import { SpatialMethodEnum } from './typeorm.interface';
 
 export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
   protected geometryService = new ProjectGeometryService();
@@ -341,6 +341,15 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         }
       }
     }
+
+    try {
+      const entity = await this.repo.findOne(
+        dto[this.getPrimaryParam(req.options)],
+      );
+      if (entity) {
+        throw new BadRequestException('Đã tồn tại khóa chính');
+      }
+    } catch (error) {}
 
     const result = await super.createOne(req, dto);
     if (result[geoColumn.propertyName]) {
