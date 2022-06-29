@@ -343,9 +343,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
 
     try {
-      const entity = await this.repo.findOne(
-        dto[this.getPrimaryParam(req.options)],
-      );
+      const primaryKeyVal = dto[this.getPrimaryParam(req.options)] as
+        | string
+        | number;
+      const entity = await this.repo.findOne(primaryKeyVal);
       if (entity) {
         throw new BadRequestException('Đã tồn tại khóa chính');
       }

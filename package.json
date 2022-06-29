@@ -1,6 +1,6 @@
 {
   "name": "nestjs-gis",
-  "version": "3.8.11",
+  "version": "3.9.0",
   "description": "NestJS npm package starter",
   "author": "John Biundo <johnfbiundo@gmail.com>",
   "license": "MIT",
@@ -33,23 +33,23 @@
   },
   "bugs": "https://github.com/nestjsplus/nestjs-package-starter",
   "peerDependencies": {
-    "@nestjs/common": ">=7.6.0",
-    "@nestjsx/crud": ">=4.6.0",
-    "@nestjs/jwt": ">=7.1.0",
-    "@nestjs/passport": ">=7.1.0",
-    "@nestjsx/crud-typeorm": ">=4.6.0",
+    "@nestjs/common": "^7.0.0 || ^8.0.0",
+    "@nestjs/jwt": "^7.0.0 || ^8.0.0",
+    "@nestjs/passport": "^7.0.0 || ^8.0.0",
+    "@nestjsx/crud": "^4.6.0 || ^5.0.0",
+    "@nestjsx/crud-typeorm": "^4.6.0 || ^5.0.0",
+    "bcrypt": "^4.0.0",
+    "exceljs": "^4.3.0",
     "geojson": "^0.5.0",
-    "reflect-metadata": ">=0.1.13",
-    "rxjs": ">=7.2.0",
+    "passport-local": "^1.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.2.0",
     "terraformer-arcgis-parser": "^1.1.0",
     "terraformer-wkt-parser": "^1.2.1",
-    "typeorm": "^0.2.29",
-    "bcrypt": ">=4.0.0",
-    "passport-local": "~1.0.0",
-    "exceljs": "^4.3.0"
+    "typeorm": "^0.2.29"
   },
   "dependencies": {
-    "bcrypt": ">=4.0.0",
+    "bcrypt": "^4.0.0",
     "decompress": "^4.2.1",
     "geojson": "^0.5.0",
     "geojson2shp": "^0.4.0",
@@ -95,7 +95,7 @@
     "tsconfig-paths": "3.8.0",
     "tslint": "5.16.0",
     "typeorm": "^0.2.29",
-    "typescript": "3.4.3"
+    "typescript": "^4.7.4"
   },
   "jest": {
     "moduleFileExtensions": [
