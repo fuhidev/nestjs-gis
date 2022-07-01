@@ -1,5 +1,7 @@
 import { Controller, DynamicModule, Module } from '@nestjs/common';
 import { PATH_METADATA } from '@nestjs/common/constants';
+import { AuthModule } from '../../system-manager';
+import { ArcgisJWTAuthGuard } from './arcgis-jwt-auth.guard';
 import { ArcgisProxyOptions, setOptions } from './arcgis-proxy-token';
 import { ArcgisProxyController } from './arcgis-proxy.controller';
 import { ArcgisProxyService } from './arcgis-proxy.service';
@@ -18,8 +20,9 @@ export class ArcgisProxyModule {
     setOptions(options);
     return {
       module: ArcgisProxyModule,
+      imports: [AuthModule],
       controllers: [ArcgisProxyController],
-      providers: [ArcgisProxyService],
+      providers: [ArcgisProxyService, ArcgisJWTAuthGuard],
     };
   }
 }
