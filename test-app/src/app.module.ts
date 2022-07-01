@@ -1,36 +1,23 @@
-import { Controller, Module, UseGuards } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   ArcgisProxyModule,
   GeometryModule,
-  GISTypeOrmCrudService,
   systemEntities,
   SystemManagerModule,
-  DynamicRestModule,
-  geometryTransformer,
-  GeometryTypeEnum,
-  JwtAuthGuard,
 } from 'nestjs-gis';
-import { TaiNguyenBienModule } from '@tai-nguyen-bien/tai-nguyen-bien.module';
-import {
-  Entity,
-  getCustomRepository,
-  getRepository,
-  Repository,
-} from 'typeorm';
-import { MysqlConnectionOptions } from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerConnectionOptions';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 const dbConfig: SqlServerConnectionOptions = {
   options: { encrypt: false },
   type: 'mssql',
-  host: '171.244.32.245',
+  host: 'ditagis.com',
   port: 1433,
   username: 'sa',
   password: 'Ditagis123',
-  database: 'QuanLyHangHai',
+  database: 'BinhThuanGIS',
   synchronize: false,
   logging: false,
   entities: ['dist/**/*.entity{.ts,.js}', ...systemEntities],
@@ -54,14 +41,14 @@ const dbConfig: SqlServerConnectionOptions = {
       // },
       // },
     }),
-    // ArcgisProxyModule.forRoot({
-    //   arcUrl: 'http://171.244.32.245/arcgis',
-    //   route: 'arcgis',
-    //   user: {
-    //     username: 'backendproxy',
-    //     password: 'backendproxy@123',
-    //   },
-    // }),
+    ArcgisProxyModule.forRoot({
+      arcUrl: 'http://ditagis.com/arcgis',
+      route: 'arcgis',
+      user: {
+        username: 'backendproxy',
+        password: 'backendproxy@123',
+      },
+    }),
     // ArcgisProxyModule.forRoot({
     //   arcUrl: 'http://ditagis.com/arcgis',
     //   route: 'ditagis',
@@ -73,216 +60,8 @@ const dbConfig: SqlServerConnectionOptions = {
       host: 'http://localhost:3000',
     }),
 
-    DynamicRestModule.fromSys({
-      dbConfig: { ...dbConfig, name: 'fromsys' },
-    }),
-
-    // DynamicRestModule.forRoot({
-    //   dbConfig: {
-    //     options: { encrypt: false },
-    //     // keepConnectionAlive: true,
-    //     name:'sdoc',
-    //     type: 'mssql',
-    //     host: '171.244.32.245',
-    //     port: 1433,
-    //     username: 'sa',
-    //     password: 'Ditagis123',
-    //     database: 'SDoc_NinhThuan',
-    //     synchronize: false,
-    //   },
-    //   restEntities:[
-    //     {
-    //       path: 'rest/sdoc/file-group',
-    //       tableName: 'FileGroup',
-    //       columns: [
-    //         {  type: 'smallint', propertyName: 'id' ,primary:true},
-    //         {  type: 'nvarchar', propertyName: 'groupName' },
-    //       ],
-    //     },
-    //   ]
-    // }),
-    // DynamicRestModule.forRoot({
-    //   dbConfig: {
-    //     options: { encrypt: false },
-    //     // keepConnectionAlive: true,
-    //     name: 'restmodule',
-    //     type: 'mssql',
-    //     host: '171.244.32.245',
-    //     port: 1433,
-    //     username: 'sa',
-    //     password: 'Ditagis123',
-    //     database: 'NinhThuan_TaiNguyenBien',
-    //     synchronize: false,
-    //   },
-    //   restEntities: [
-    //     {
-    //       path: 'rest/dm-loai-cang',
-    //       tableName: 'CangBien_DM_Loai',
-    //       columns: [
-    //         {
-    //           propertyName: 'code',
-    //           type: 'nvarchar',
-    //           primary: true,
-    //           alias: 'Mã',
-    //         },
-    //         {
-    //           propertyName: 'value',
-    //           type: 'nvarchar',
-    //           isDisplayColumn: true,
-    //           alias: 'Giá trị',
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       path: 'rest/cang-bien',
-    //       tableName: 'CangBien',
-    //       columns: [
-    //         { propertyName: 'objectId', type: 'int', primary: true },
-    //         {
-    //           propertyName: 'ten',
-    //           type: 'nvarchar',
-    //           isDisplayColumn: true,
-    //           alias: 'Tên',
-    //         },
-    //         {
-    //           propertyName: 'maLoai',
-    //           type: 'nvarchar',
-    //           name: 'Loai',
-    //           alias: 'Loại cảng biển',
-    //         },
-    //         {
-    //           propertyName: 'loai',
-    //           join: {
-    //             type: 'many-to-one',
-    //             target: 'CangBien_DM_Loai',
-    //             joinColumn: {
-    //               name: 'Loai',
-    //             },
-    //           },
-    //         },
-    //         { propertyName: 'dienTich', type: 'decimal', alias: 'Diện tích' },
-    //         { propertyName: 'congSuat', type: 'decimal', alias: 'Công suất' },
-    //         { propertyName: 'moTa', type: 'nvarchar', alias: 'Mô tả' },
-    //         {
-    //           propertyName: 'shape',
-    //           spatialFeatureType: GeometryTypeEnum.Polygon,
-    //           type: 'geometry',
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       path: 'rest/dm-cap-di-tich',
-    //       tableName: 'DiTich_DM_CapDiTich',
-    //       columns: [
-    //         {
-    //           propertyName: 'code',
-    //           name: 'Code',
-    //           type: 'nvarchar',
-    //           primary: true,
-    //         },
-    //         {
-    //           propertyName: 'value',
-    //           name: 'Value',
-    //           type: 'nvarchar',
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       path: 'rest/di-tich',
-    //       tableName: 'DITICH',
-    //       // decorators:[UseGuards(JwtAuthGuard)],
-    //       // crudOptions:{
-    //       //   routes:{
-    //       //     getManyBase:{
-    //       //       decorators:[UseGuards(JwtAuthGuard)]
-    //       //     }
-    //       //   }
-    //       // },
-    //       columns: [
-    //         {
-    //           propertyName: 'objectId',
-    //           name: 'OBJECTID',
-    //           type: 'int',
-    //           primary: true,
-    //         },
-    //         {
-    //           propertyName: 'maCap',
-    //           name: 'CAP',
-    //           type: 'varchar',
-    //         },
-    //         {
-    //           propertyName: 'cap',
-    //           join: {
-    //             target: 'DiTich_DM_CapDiTich',
-    //             joinColumn: {
-    //               name: 'CAP',
-    //             },
-    //             type: 'many-to-one',
-    //           },
-    //         },
-    //         {
-    //           propertyName: 'shape',
-    //           name: 'SHAPE',
-    //           type: 'geometry',
-    //           spatialFeatureType: GeometryTypeEnum.Point,
-    //         },
-    //       ],
-    //     },
-    //     {
-    //       path: 'rest/dam-pha-ven-bien',
-    //       tableName: 'DAMPHAVENBIEN',
-    //       columns: [
-    //         {
-    //           propertyName: 'objectId',
-    //           name: 'OBJECTID',
-    //           type: 'int',
-    //           primary: true,
-    //         },
-    //         {
-    //           propertyName: 'shape',
-    //           name: 'SHAPE',
-    //           type: 'geometry',
-    //           spatialFeatureType: GeometryTypeEnum.Polygon,
-    //         },
-    //       ],
-    //     },
-    //   ],
-    // }),
-    // DynamicRestModule.forRoot({
-    //   dbConfig: {
-    //     options: { encrypt: false },
-    //     keepConnectionAlive: true,
-    //     type: "mssql",
-    //     host: "171.244.32.245",
-    //     port: 1433,
-    //     username: "sa",
-    //     password: "Ditagis123",
-    //     database: "TIWAGIS",
-    //     synchronize: false,
-    //   },
-    //   restEntities: [
-    //     {
-    //       path: "rest/dong-ho-tong-chi-tiet",
-    //       tableName: "DongHoTongChiTiet",
-    //       crudOptions:{
-    //         routes:{
-    //           updateOneBase:{
-    //             allowParamsOverride:true
-    //           }
-    //         }
-    //       },
-    //       columns: [
-    //         { propertyName: "ID", type: "int", primary: true, generated: true },
-    //         { propertyName: "IDMaDongHo", type: "varchar" },
-    //         { propertyName: "ApLuc", type: "float" },
-    //         { propertyName: "LuuLuong", type: "float" },
-    //         { propertyName: "SanLuong", type: "bigint" },
-    //         { propertyName: "NgayCapNhat", type: "datetime" },
-    //         { propertyName: "NguoiCapNhat", type: "varchar" },
-    //         { propertyName: "ThoiGian", type: "datetime" },
-    //       ],
-    //     },
-    //   ],
+    // DynamicRestModule.fromSys({
+    //   dbConfig: { ...dbConfig, name: 'fromsys' },
     // }),
   ],
   controllers: [AppController],

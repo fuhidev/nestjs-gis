@@ -1,7 +1,13 @@
-import { All, BadRequestException, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  All,
+  BadRequestException,
+  Get,
+  Query,
+  Req,
+  Res
+} from '@nestjs/common';
 import { Request, Response } from 'express';
-import fetch, { RequestInit, Headers } from 'node-fetch';
-import { JwtAuthGuard } from '../../system-manager/auth/jwt-auth.guard';
+import fetch, { Headers, RequestInit } from 'node-fetch';
 import { getOption } from './arcgis-proxy-token';
 export class ArcgisProxyController {
   private tokens: {
@@ -78,20 +84,20 @@ export class ArcgisProxyController {
       .then(r => r.json())
       .then(r => res.send(r));
   }
+
+  @All('services/*/MapServer/tile')
+  async getTile(@Res() res: Response, @Req() req: Request) {
+    this.root(res, req, 'image');
+  }
+
   @All('services/*')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   async root(
     @Res() res: Response,
     @Req() req: Request,
     @Query('f') format = 'json',
   ) {
     const headers = new Headers();
-    // Object.keys(req.headers).forEach(key => {
-    //   const value = req.headers[key] as string;
-    //   if (value) {
-    //     headers.append(key, value);
-    //   }
-    // });
     const route = this.getRoute(req.originalUrl);
     const arcUrl = this.getArcUrl(route);
     const options: RequestInit = {
@@ -115,10 +121,33 @@ export class ArcgisProxyController {
     req.originalUrl = req.originalUrl.replace(route, '');
     let url = `${arcUrl}${req.originalUrl}`;
 
-    if (url.indexOf('/MapServer/tile') > -1) {
-      format = 'image';
-    }
+    // check required token
     this.send(url, options, format, res, route);
+  }
+
+  private async isRequiredToken(url: string,options:RequestInit) {
+    let idx = -1;
+    {
+      let link = 'MapServer';
+      if((idx = url.lastIndexOf(link)) === -1){
+        link = 'FeatureServer';
+        idx = url.lastIndexOf(link);
+      }
+      if(idx > - 1){
+        idx = idx + link.length;
+      }
+    }
+    if(idx > -1){
+      const baseurl = url.substring(0, idx) + '?f=json';
+      const resOp = await fetch(baseurl, options);
+      const json = await resOp.json();
+      if (json.error && json.error.code === 499) {
+        return true;
+      } else {
+        return false;
+      }  
+    }
+    return false;
   }
 
   private async send(
@@ -129,16 +158,15 @@ export class ArcgisProxyController {
     route: string,
   ) {
     try {
+      const isRequiredToken = await this.isRequiredToken(url,options);
+      if(isRequiredToken){
+        const token = await this.getToken(route);
+        url += `${url.indexOf('?') > -1 ? '&' : '?'}token=${token.token}`;
+      }
       const resOp = await fetch(url, options);
       if (format === 'json') {
         const json = await resOp.json();
-        if (json.error && json.error.code === 499) {
-          const token = await this.getToken(route);
-          url += `${url.indexOf('?') > -1 ? '&' : '?'}token=${token.token}`;
-          this.send(url, options, format, res, route);
-        } else {
           res.send(json);
-        }
       } else if (format === 'image') {
         const buffer = await resOp.buffer();
         res.contentType('image/png');
