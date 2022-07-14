@@ -17,6 +17,7 @@ import { ProjectGeometryService } from '../geometry/project-geometry/project-geo
 import { moduleOptions } from '../token';
 import {
   FilterGeoBody,
+  GetCountGroupParam,
   GISCrudRequest,
   GISParsedRequestParams,
   SpatialMethodEnum,
@@ -278,14 +279,19 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       this.throwBadRequestException(`Empty data. Nothing to save.`);
     }
     {
-      // objectId
-      const objectIdCol = this.repo.metadata.columns.find(
-        f => f.databaseName.toLowerCase() === 'objectid',
-      );
+      if (this.repo.metadata.primaryColumns.length === 0) {
+        this.throwBadRequestException('Lớp không có khóa chính');
+      }
+      if (this.repo.metadata.primaryColumns.length > 1) {
+        this.throwBadRequestException(
+          'Chưa hỗ trợ lớp có nhiều hơn một khóa chính',
+        );
+      }
+      const primaryCol = this.repo.metadata.primaryColumns[0];
 
       // nếu objectId không tự tạo giá trị có nghĩa objectId được tạo từ Arcmap
       // vì vậy phải sử dụng procedure của arcmap trong sql để lấy objectId
-      if (objectIdCol) {
+      if (primaryCol) {
         let isGenerated = false;
         try {
           const response = await this.repo.manager
@@ -299,21 +305,21 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
               'i.TABLE_NAME = :tableName and i.COLUMN_NAME = :columnName',
               {
                 tableName: this.repo.metadata.tableName,
-                columnName: objectIdCol.databaseName,
+                columnName: primaryCol.databaseName,
               },
             )
             .getRawOne();
           isGenerated = response.value;
           if (isGenerated) {
-            objectIdCol.isGenerated = true;
-            objectIdCol.generationStrategy = 'increment';
+            primaryCol.isGenerated = true;
+            primaryCol.generationStrategy = 'increment';
           }
         } catch (error) {
           throw new BadRequestException(
             'Không xác định được IDENTITY của PRIMARY KEY',
           );
         }
-        if (!objectIdCol.isGenerated) {
+        if (primaryCol.databaseName === 'OBJECTID' && !primaryCol.isGenerated) {
           try {
             const result: Array<{ objectId: number }> = await this.repo.query(`
             DECLARE @owner varchar(10)
@@ -331,7 +337,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
             if (result.length) {
               const objectId = result[0].objectId;
               //@ts-ignore
-              dto[objectIdCol.propertyName] = objectId;
+              dto[primaryCol.propertyName] = objectId;
             }
           } catch (error) {
             throw new BadRequestException(
@@ -611,6 +617,19 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     return false;
   }
 
+  async getCountGroup(params: GetCountGroupParam) {
+    const builder = await this.createBuilder(params.parsed, params.options);
+    if (moduleOptions.hook && moduleOptions.hook.crudService) {
+      await moduleOptions.hook.crudService.call(this, 'getCountGroup', [
+        builder,
+        ...arguments,
+      ]);
+    }
+    const count = await builder.getCount();
+    return {
+      count,
+    };
+  }
   async getCount(req: GISCrudRequest) {
     const builder = await this.createBuilder(req.parsed, req.options);
     if (moduleOptions.hook && moduleOptions.hook.crudService) {

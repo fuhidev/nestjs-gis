@@ -1,8 +1,7 @@
 import { CrudRequest } from '@nestjsx/crud';
 import { ParsedRequestParams } from '@nestjsx/crud-request';
-import { Envelope } from 'terraformer-arcgis-parser';
+import { Envelope, Geometry } from 'terraformer-arcgis-parser';
 import { BaseEntity } from 'typeorm';
-import { Geometry } from 'terraformer-arcgis-parser';
 import { SpatialReference } from '../geometry';
 
 export interface FilterGeoBody {
@@ -32,3 +31,5 @@ export enum SpatialMethodEnum {
   Intersects = 'intersects',
   Touches = 'touches',
 }
+
+export type GetCountGroupParam = GISCrudRequest & { groupBy: string };
