@@ -287,64 +287,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
           'Chưa hỗ trợ lớp có nhiều hơn một khóa chính',
         );
       }
-      const primaryCol = this.repo.metadata.primaryColumns[0];
-
-      // nếu objectId không tự tạo giá trị có nghĩa objectId được tạo từ Arcmap
-      // vì vậy phải sử dụng procedure của arcmap trong sql để lấy objectId
-      if (primaryCol) {
-        let isGenerated = false;
-        try {
-          const response = await this.repo.manager
-            .createQueryBuilder()
-            .from('INFORMATION_SCHEMA.COLUMNS', 'i')
-            .select(
-              `COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity')`,
-              'value',
-            )
-            .where(
-              'i.TABLE_NAME = :tableName and i.COLUMN_NAME = :columnName',
-              {
-                tableName: this.repo.metadata.tableName,
-                columnName: primaryCol.databaseName,
-              },
-            )
-            .getRawOne();
-          isGenerated = response.value;
-          if (isGenerated) {
-            primaryCol.isGenerated = true;
-            primaryCol.generationStrategy = 'increment';
-          }
-        } catch (error) {
-          throw new BadRequestException(
-            'Không xác định được IDENTITY của PRIMARY KEY',
-          );
-        }
-        if (primaryCol.databaseName === 'OBJECTID' && !primaryCol.isGenerated) {
-          try {
-            const result: Array<{ objectId: number }> = await this.repo.query(`
-            DECLARE @owner varchar(10)
-            SET @owner = (
-            select TOP 1 owner  from SDE_table_registry str where table_name ='${
-              this.repo.metadata.tableName
-            }'
-            )
-
-            declare @rowid int
-            EXEC next_rowid @owner, '${
-              this.repo.metadata.tableName
-            }' ,@rowid output
-            select objectId = @rowid`);
-            if (result.length) {
-              const objectId = result[0].objectId;
-              //@ts-ignore
-              dto[primaryCol.propertyName] = objectId;
-            }
-          } catch (error) {
-            throw new BadRequestException(
-              'Không lấy được objectId từ dữ liệu GIS',
-            );
-          }
-        }
+      const primaryCol = await this.getPrimaryCol();
+      if (this.isEsriClass(primaryCol)) {
+        const objectId = this.generateEsriObjectId();
+        dto[primaryCol.propertyName] = objectId;
       }
     }
 
@@ -386,45 +332,65 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
     return result;
   }
-  async createMany(req: GISCrudRequest, dto: CreateManyDto<DeepPartial<T>>) {
-    const geoColumn = this.getGeometryColumn();
-    let hasGeoData = dto.bulk.length && dto.bulk[0][geoColumn.propertyName];
-    if (hasGeoData) {
-      if (req.parsed.fGeo === 'geojson') {
-        dto.bulk.forEach(d => {
-          d[geoColumn.propertyName] = arcgis.convert(d[geoColumn.propertyName]);
-        });
-      }
+  private isEsriClass(primaryCol: ColumnMetadata) {
+    return primaryCol.databaseName === 'OBJECTID' && !primaryCol.isGenerated;
+  }
 
-      // neu khac he toa do thi chuyen he toa do
-      if (!this.equalSrs(req.parsed.inSR, moduleOptions.srs)) {
-        // đổi hệ tọa độ
-        const { geometries } = await this.geometryService.project({
-          inSR: req.parsed.inSR,
-          outSR: moduleOptions.srs,
-          geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
-          geometries: dto.bulk.map(m => m['shape']) as arcgis.Geometry[],
-        });
-        geometries.forEach((geo, idx) => (dto.bulk[idx]['shape'] = geo));
-      }
+  private async generateEsriObjectId() {
+    try {
+      const result: Array<{ objectId: number }> = await this.repo.query(`
+      DECLARE @owner varchar(10)
+      SET @owner = (
+      select TOP 1 owner  from SDE_table_registry str where table_name ='${
+        this.repo.metadata.tableName
+      }'
+      )
 
-      if (
-        this.repo.metadata.columns.some(
-          f => f.databaseName.toLowerCase() === 'objectid',
-        )
-      ) {
-        const [lastEntity] = await this.repo.find({
-          order: {
-            objectId: 'DESC',
-          } as any,
-          take: 1,
-        });
-        const objectId = lastEntity ? (lastEntity as any).objectId + 1 : 1;
-        dto.bulk.forEach((d: any, idx) => {
-          d['objectId'] = objectId + idx;
-        });
+      declare @rowid int
+      EXEC next_rowid @owner, '${this.repo.metadata.tableName}' ,@rowid output
+      select objectId = @rowid`);
+      if (result.length) {
+        const objectId = result[0].objectId;
+        //@ts-ignore
+        return objectId;
       }
+    } catch (error) {
+      throw new BadRequestException('Không lấy được objectId từ dữ liệu GIS');
     }
+  }
+  private async getPrimaryCol() {
+    const primaryCol = this.repo.metadata.primaryColumns[0];
+
+    // nếu objectId không tự tạo giá trị có nghĩa objectId được tạo từ Arcmap
+    // vì vậy phải sử dụng procedure của arcmap trong sql để lấy objectId
+    let isGenerated = false;
+    try {
+      const response = await this.repo.manager
+        .createQueryBuilder()
+        .from('INFORMATION_SCHEMA.COLUMNS', 'i')
+        .select(
+          `COLUMNPROPERTY(object_id(TABLE_SCHEMA+'.'+TABLE_NAME), COLUMN_NAME, 'IsIdentity')`,
+          'value',
+        )
+        .where('i.TABLE_NAME = :tableName and i.COLUMN_NAME = :columnName', {
+          tableName: this.repo.metadata.tableName,
+          columnName: primaryCol.databaseName,
+        })
+        .getRawOne();
+      isGenerated = response.value;
+      if (isGenerated) {
+        primaryCol.isGenerated = true;
+        primaryCol.generationStrategy = 'increment';
+      }
+    } catch (error) {
+      throw new BadRequestException(
+        'Không xác định được IDENTITY của PRIMARY KEY',
+      );
+    }
+    return primaryCol;
+  }
+
+  async createMany(req: GISCrudRequest, dto: CreateManyDto<DeepPartial<T>>) {
     /* istanbul ignore if */
     if (typeof dto !== 'object' || !Array.isArray(dto.bulk)) {
       this.throwBadRequestException(`Empty data. Nothing to save.`);
@@ -438,30 +404,53 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     if (!bulk.length) {
       this.throwBadRequestException(`Empty data. Nothing to save.`);
     }
-    if (
-      this.repo.metadata.columns.some(
-        f => f.databaseName.toLowerCase() === 'objectid',
-      )
-    ) {
-      bulk.forEach((entity, idx) => {
-        (entity as any).objectId = () =>
-          `(SELECT TOP 1 ISNULL(OBJECTID,0) + ${idx} + 1 FROM ${
-            this.repo.metadata.tableName
-          } ORDER BY OBJECTID DESC)`;
-      });
+
+    const geoColumn = this.getGeometryColumn();
+    const primaryCol = await this.getPrimaryCol();
+    let hasGeoData = bulk[0][geoColumn.propertyName];
+    if (hasGeoData) {
+      if (req.parsed.fGeo === 'geojson') {
+        bulk.forEach(d => {
+          d[geoColumn.propertyName] = arcgis.convert(d[geoColumn.propertyName]);
+        });
+      }
+
+      // neu khac he toa do thi chuyen he toa do
+      if (!this.equalSrs(req.parsed.inSR, moduleOptions.srs)) {
+        // đổi hệ tọa độ
+        const { geometries } = await this.geometryService.project({
+          inSR: req.parsed.inSR,
+          outSR: moduleOptions.srs,
+          geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
+          geometries: bulk.map(m => m['shape']) as arcgis.Geometry[],
+        });
+        geometries.forEach((geo, idx) => (bulk[idx]['shape'] = geo));
+      }
+
+      if (this.isEsriClass(primaryCol)) {
+        const promises = [];
+        bulk.forEach((d: any) => {
+          const promise = this.generateEsriObjectId().then(
+            objectId => (d[primaryCol.propertyName] = objectId),
+          );
+          promises.push(promise);
+        });
+        await Promise.all(promises);
+      }
     }
-    const primaryParam = this.getPrimaryParam(req.options);
 
     const builder = this.repo
       .createQueryBuilder()
       .insert()
       .values(bulk)
-      .returning([primaryParam]);
+      .returning([primaryCol.propertyName]);
 
     const rez = await builder.execute();
     const result = await this.find({
       where: {
-        [primaryParam]: In(rez.generatedMaps.map(m => m[primaryParam])),
+        [primaryCol.propertyName]: In(
+          rez.generatedMaps.map(m => m[primaryCol.propertyName]),
+        ),
       },
       select: req.parsed.fields.length ? (req.parsed.fields as any) : undefined,
     });
