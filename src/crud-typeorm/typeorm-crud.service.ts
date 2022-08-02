@@ -9,7 +9,7 @@ import { TypeOrmCrudService as BaseTypeOrmCrudService } from '@nestjsx/crud-type
 import * as arcgis from 'terraformer-arcgis-parser';
 import { Geometry } from 'terraformer-arcgis-parser';
 import * as wkt from 'terraformer-wkt-parser';
-import { DeepPartial, In, Repository, SelectQueryBuilder } from 'typeorm';
+import { DeepPartial, Repository, SelectQueryBuilder } from 'typeorm';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
 import { GeometryTypeEnum } from '../geometry/arcgis/interfaces/arcgis-geometry.interface';
 import { SpatialReference } from '../geometry/arcgis/interfaces/spatial-reference';
@@ -437,21 +437,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       }
     }
 
-    const builder = this.repo
-      .createQueryBuilder()
-      .insert()
-      .values(bulk)
-      .returning([primaryCol.propertyName]);
-
-    const rez = await builder.execute();
-    const result = await this.find({
-      where: {
-        [primaryCol.propertyName]: In(
-          rez.generatedMaps.map(m => m[primaryCol.propertyName]),
-        ),
-      },
-      select: req.parsed.fields.length ? (req.parsed.fields as any) : undefined,
-    });
+    const result = await super.createMany(req, { bulk });
 
     if (
       !req.parsed.fields.length ||
