@@ -274,7 +274,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     }
     dto[geoColumn.propertyName] = shape;
 
-    const entity = this.prepareEntityBeforeSave(dto, req.parsed);
+    let entity = this.prepareEntityBeforeSave(dto, req.parsed);
     if (!entity) {
       this.throwBadRequestException(`Empty data. Nothing to save.`);
     }
@@ -289,20 +289,18 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       }
       const primaryCol = await this.getPrimaryCol();
       if (this.isEsriClass(primaryCol)) {
-        const objectId = this.generateEsriObjectId();
+        const objectId = await this.generateEsriObjectId();
         dto[primaryCol.propertyName] = objectId;
       }
     }
 
-    try {
-      const primaryKeyVal = dto[this.getPrimaryParam(req.options)] as
-        | string
-        | number;
-      const entity = await this.repo.findOne(primaryKeyVal);
-      if (entity) {
-        throw new BadRequestException('Đã tồn tại khóa chính');
-      }
-    } catch (error) {}
+    const primaryKeyVal = dto[this.getPrimaryParam(req.options)] as
+      | string
+      | number;
+    entity = await this.repo.findOne(primaryKeyVal);
+    if (entity) {
+      throw new BadRequestException('Đã tồn tại khóa chính');
+    }
 
     const result = await super.createOne(req, dto);
     if (result[geoColumn.propertyName]) {

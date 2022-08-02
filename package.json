@@ -1,6 +1,6 @@
 {
   "name": "nestjs-gis",
-  "version": "3.9.42",
+  "version": "3.9.5",
   "description": "NestJS npm package starter",
   "author": "John Biundo <johnfbiundo@gmail.com>",
   "license": "MIT",
