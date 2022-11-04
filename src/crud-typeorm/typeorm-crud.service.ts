@@ -293,11 +293,11 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         dto[primaryCol.propertyName] = objectId;
       }
     }
-    if (this.getPrimaryParam(req.options) !== undefined) {
-      const primaryKeyVal = dto[this.getPrimaryParam(req.options)] as
-        | string
-        | number;
 
+    const primaryKeyVal = dto[this.getPrimaryParam(req.options)] as
+      | string
+      | number;
+    if (primaryKeyVal !== undefined) {
       entity = await this.repo.findOne(primaryKeyVal);
       if (entity) {
         throw new BadRequestException('Đã tồn tại khóa chính');
