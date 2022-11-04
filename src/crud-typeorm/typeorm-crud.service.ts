@@ -293,13 +293,15 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         dto[primaryCol.propertyName] = objectId;
       }
     }
+    if (this.getPrimaryParam(req.options) !== undefined) {
+      const primaryKeyVal = dto[this.getPrimaryParam(req.options)] as
+        | string
+        | number;
 
-    const primaryKeyVal = dto[this.getPrimaryParam(req.options)] as
-      | string
-      | number;
-    entity = await this.repo.findOne(primaryKeyVal);
-    if (entity) {
-      throw new BadRequestException('Đã tồn tại khóa chính');
+      entity = await this.repo.findOne(primaryKeyVal);
+      if (entity) {
+        throw new BadRequestException('Đã tồn tại khóa chính');
+      }
     }
 
     const result = await super.createOne(req, dto);
@@ -396,7 +398,7 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
 
     const bulk = dto.bulk
       .map(one => this.prepareEntityBeforeSave(one, req.parsed))
-      .filter(d => d !== undefined);
+      .filter(d => d !== undefined) as DeepPartial<T>[];
 
     /* istanbul ignore if */
     if (!bulk.length) {
