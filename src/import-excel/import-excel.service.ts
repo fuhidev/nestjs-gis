@@ -1,24 +1,24 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { Workbook } from 'exceljs';
 import fetch from 'node-fetch';
-import { ProjectGeometryService } from '../geometry/project-geometry/project-geometry.service';
 import * as arcgis from 'terraformer-arcgis-parser';
 import { GeometryType, Metadata } from '../decorators/route-metadata.decorator';
-import { moduleOptions } from '../token';
 import {
   equalSrs,
   SpatialReference,
 } from '../geometry/arcgis/interfaces/spatial-reference';
+import { ProjectGeometryService } from '../geometry/project-geometry/project-geometry.service';
+import { moduleOptions } from '../token';
 @Injectable()
 export class ImportExcelService {
   protected geometryService = new ProjectGeometryService();
-  public async getTemplate(p: { url: string }) {
-    const { url } = p;
+  public async getTemplate(p: { url: string; authorization?: string }) {
+    const { url, authorization } = p;
     let baseUrl = this.getHostname(url);
     const workbook = new Workbook();
     // tao worksheet data
     const ws = workbook.addWorksheet('Ban mau');
-    const metadata = await this.getMetadata(url);
+    const metadata = await this.getMetadata(url, authorization);
     // tao cot
     let cidx = 1;
     for (const field of metadata.columns) {
@@ -103,9 +103,17 @@ export class ImportExcelService {
     return baseUrl;
   }
 
-  private async getMetadata(url: string): Promise<Metadata> {
+  private async getMetadata(
+    url: string,
+    authorization?: string,
+  ): Promise<Metadata> {
+    const headers = {};
+    if (authorization) {
+      headers['Authorization'] = authorization;
+    }
     return fetch(url + '/metadata', {
       method: 'GET',
+      headers,
     }).then(t => t.json());
   }
 
@@ -189,8 +197,13 @@ export class ImportExcelService {
     };
   }
 
-  public async importExcel(p: { url: string; file; srs: string }) {
-    let { file, url, srs } = p;
+  public async importExcel(p: {
+    url: string;
+    file: Express.Multer.File;
+    srs: string;
+    authorization?: string;
+  }) {
+    let { file, url, srs, authorization } = p;
 
     if (
       file.mimetype !==
@@ -271,6 +284,7 @@ export class ImportExcelService {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
+            Authorization: authorization,
           },
           body: JSON.stringify(value),
         }).then(t => t.json());

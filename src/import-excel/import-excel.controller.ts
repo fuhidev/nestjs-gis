@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Headers,
   HttpCode,
   Post,
   Query,
@@ -9,6 +10,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { SpatialReference } from '../geometry/arcgis';
 import { ImportExcelService } from './import-excel.service';
 
@@ -16,14 +18,18 @@ import { ImportExcelService } from './import-excel.service';
 export class ImportExcelController {
   constructor(private service: ImportExcelService) {}
   @Get('template')
-  async getTemplate(@Res() res, @Query('url') url: string) {
+  async getTemplate(
+    @Res() res: Response,
+    @Headers('Authorization') authorization: string,
+    @Query('url') url: string,
+  ) {
     var fileName = 'filemau.xlsx';
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     );
     res.setHeader('Content-Disposition', 'attachment; filename=' + fileName);
-    const workbook = await this.service.getTemplate({ url });
+    const workbook = await this.service.getTemplate({ url, authorization });
     await workbook.xlsx.write(res);
     res.end();
   }
@@ -35,8 +41,9 @@ export class ImportExcelController {
     @UploadedFile() file,
     @Query('url') url: string,
     @Query('srs') srs: string,
+    @Headers('Authorization') authorization: string,
   ) {
-    return this.service.importExcel({ url, file, srs });
+    return this.service.importExcel({ url, file, srs, authorization });
   }
   @Post('exceldata')
   @HttpCode(200)
@@ -46,6 +53,6 @@ export class ImportExcelController {
     @Query('srs') srs: SpatialReference | number,
     @Query('outsrs') outSRS: SpatialReference | number,
   ) {
-    return this.service.getExcelData({ file, srs,outSRS });
+    return this.service.getExcelData({ file, srs, outSRS });
   }
 }
