@@ -3,7 +3,7 @@ import {
   CreateManyDto,
   CrudRequest,
   CrudRequestOptions,
-  GetManyDefaultResponse,
+  GetManyDefaultResponse
 } from '@nestjsx/crud';
 import { TypeOrmCrudService as BaseTypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import * as arcgis from 'terraformer-arcgis-parser';
@@ -20,7 +20,7 @@ import {
   GetCountGroupParam,
   GISCrudRequest,
   GISParsedRequestParams,
-  SpatialMethodEnum,
+  SpatialMethodEnum
 } from './typeorm.interface';
 
 export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
@@ -492,13 +492,13 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
           geometries: [shape],
         });
         if (geometries.length) {
-          dto[geoColumn.propertyName] = geometries[0];
+          shape = geometries[0];
         } else {
           throw new Error('Không thể chuyển hệ tọa độ, vui lòng thử lại');
         }
       }
     }
-
+    dto[geoColumn.propertyName] = shape;
     const result = await super.updateOne(req, dto);
     if (result[geoColumn.propertyName]) {
       if (!this.equalSrs(req.parsed.outSR, moduleOptions.srs)) {
