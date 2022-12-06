@@ -29,7 +29,7 @@ export async function generateDynamicSysRest(
 
 export async function convertSysLayer2RestEntities(p: { con: Connection }) {
   const { con } = p;
-  const logger = new Logger();
+  const logger = new Logger('DynamicRestModule');
 
   const runner = con.createQueryRunner();
   const restEntities: Array<RestEntity> = [];
@@ -45,10 +45,10 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
         'geometryType=lyr.geometryType',
       ])
       .getRawMany();
-    logger.log(`[DynamicRestModule] Found ${layerEntities.length} Layer`);
+    logger.log(`Found ${layerEntities.length} Layer`);
     for (const layer of layerEntities) {
       if (await runner.hasTable(layer.layerId)) {
-        logger.log(`[DynamicRestModule] generate ${layer.layerId}`);
+        logger.log(`generate ${layer.layerId}`);
         const restEntityColumns: RestEntityColumn[] = [];
         const table = await runner.getTable(layer.layerId);
         const columnEntities: Array<SYSColumnEntity> = await builder
@@ -100,7 +100,7 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
         };
         restEntities.push(restEntity);
         logger.log(
-          `[DynamicRestModule] generate ${layer.layerId} with ${
+          `generate ${layer.layerId} with ${
             restEntityColumns.length
           } columns, path = ${layer.url}`,
         );
