@@ -46,68 +46,87 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
       ])
       .getRawMany();
     logger.log(`Found ${layerEntities.length} Layer`);
+    let promises = [];
     for (const layer of layerEntities) {
-      if (await runner.hasTable(layer.layerId)) {
-        logger.log(`generate ${layer.layerId}`);
-        const restEntityColumns: RestEntityColumn[] = [];
-        const table = await runner.getTable(layer.layerId);
-        const columnEntities: Array<SYSColumnEntity> = await builder
-          .clone()
-          .from('SYS_Column', 'col')
-          .where('col.table=:table', { table: layer.layerId })
-          .select([
-            'alias = col.alias',
-            'isDisplay = col.isDisplay',
-            'joinTable = col.joinTable',
-            'joinType = col.joinType',
-            '[column] = col.column',
-          ])
-          .getRawMany();
-
-        table.columns.forEach(tableColumn => {
-          const columnEntity = columnEntities.find(
-            f => f.column === tableColumn.name,
-          );
-          const restEntityColumn: RestEntityColumn = {
-            propertyName: tableColumn.name,
-            alias: columnEntity && columnEntity.alias,
-            isDisplayColumn: columnEntity && columnEntity.isDisplay,
-            primary: tableColumn.isPrimary,
-            type: tableColumn.type as ColumnType,
-          };
-          if (tableColumn.type === 'geometry') {
-            restEntityColumn.propertyName = 'shape';
-            restEntityColumn.spatialFeatureType = layer.geometryType;
+      const promise = getRestEntity(runner, layer, logger, builder).then(
+        entity => {
+          if (entity) {
+            restEntities.push(entity);
           }
-          restEntityColumns.push(restEntityColumn);
-
-          if (columnEntity && columnEntity.joinTable && columnEntity.joinType) {
-            const restEntityJoinColumn: RestEntityColumn = {
-              propertyName: `join${tableColumn.name}`,
-              join: {
-                joinColumn: { name: tableColumn.name },
-                target: columnEntity.joinTable,
-                type: columnEntity.joinType,
-              },
-            };
-            restEntityColumns.push(restEntityJoinColumn);
-          }
-        });
-        const restEntity: RestEntity = {
-          columns: restEntityColumns,
-          path: layer.url,
-          tableName: layer.layerId,
-        };
-        restEntities.push(restEntity);
-        logger.log(
-          `generate ${layer.layerId} with ${
-            restEntityColumns.length
-          } columns, path = ${layer.url}`,
-        );
-      }
+        },
+      );
+      promises.push(promise);
     }
+    await Promise.all(promises);
     return restEntities;
   } finally {
     runner.release();
   }
+}
+async function getRestEntity(
+  runner,
+  layer: LayerEntity,
+  logger: Logger,
+  builder,
+) {
+  if (await runner.hasTable(layer.layerId)) {
+    logger.log(`generate ${layer.layerId}`);
+    const restEntityColumns: RestEntityColumn[] = [];
+    const table = await runner.getTable(layer.layerId);
+    const columnEntities: Array<SYSColumnEntity> = await builder
+      .clone()
+      .from('SYS_Column', 'col')
+      .where('col.table=:table', { table: layer.layerId })
+      .select([
+        'alias = col.alias',
+        'isDisplay = col.isDisplay',
+        'joinTable = col.joinTable',
+        'joinType = col.joinType',
+        '[column] = col.column',
+      ])
+      .getRawMany();
+
+    table.columns.forEach(tableColumn => {
+      const columnEntity = columnEntities.find(
+        f => f.column === tableColumn.name,
+      );
+      const restEntityColumn: RestEntityColumn = {
+        propertyName: tableColumn.name,
+        alias: columnEntity && columnEntity.alias,
+        isDisplayColumn: columnEntity && columnEntity.isDisplay,
+        primary: tableColumn.isPrimary,
+        type: tableColumn.type as ColumnType,
+      };
+      if (tableColumn.type === 'geometry') {
+        restEntityColumn.propertyName = 'shape';
+        restEntityColumn.spatialFeatureType = layer.geometryType;
+      }
+      restEntityColumns.push(restEntityColumn);
+
+      if (columnEntity && columnEntity.joinTable && columnEntity.joinType) {
+        const restEntityJoinColumn: RestEntityColumn = {
+          propertyName: `join${tableColumn.name}`,
+          join: {
+            joinColumn: { name: tableColumn.name },
+            target: columnEntity.joinTable,
+            type: columnEntity.joinType,
+          },
+        };
+        restEntityColumns.push(restEntityJoinColumn);
+      }
+    });
+    const restEntity: RestEntity = {
+      columns: restEntityColumns,
+      path: layer.url,
+      tableName: layer.layerId,
+    };
+
+    logger.log(
+      `generate ${layer.layerId} with ${
+        restEntityColumns.length
+      } columns, path = ${layer.url}`,
+    );
+    return restEntity;
+  }
+  return null;
 }
