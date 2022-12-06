@@ -1,19 +1,13 @@
+import { Logger } from '@nestjs/common';
+import { ColumnType, Connection, createConnection } from 'typeorm';
+import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerConnectionOptions';
 import { LayerEntity, SYSColumnEntity } from '../system-manager';
-import {
-  ColumnType,
-  Connection,
-  ConnectionOptions,
-  createConnection,
-  getConnection,
-  getRepository,
-} from 'typeorm';
 import { generateDynamicRest } from './dynamic-rest-build';
 import {
   DynamicRestFromSysOptions,
   RestEntity,
   RestEntityColumn,
 } from './dynamic-rest.interface';
-import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerConnectionOptions';
 
 export async function generateDynamicSysRest(
   options: DynamicRestFromSysOptions,
@@ -35,6 +29,7 @@ export async function generateDynamicSysRest(
 
 export async function convertSysLayer2RestEntities(p: { con: Connection }) {
   const { con } = p;
+  const logger = new Logger();
 
   const runner = con.createQueryRunner();
   const restEntities: Array<RestEntity> = [];
@@ -50,8 +45,10 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
         'geometryType=lyr.geometryType',
       ])
       .getRawMany();
+    logger.log(`[DynamicRestModule] Found ${layerEntities.length} Layer`);
     for (const layer of layerEntities) {
       if (await runner.hasTable(layer.layerId)) {
+        logger.log(`[DynamicRestModule] generate ${layer.layerId}`);
         const restEntityColumns: RestEntityColumn[] = [];
         const table = await runner.getTable(layer.layerId);
         const columnEntities: Array<SYSColumnEntity> = await builder
@@ -102,6 +99,11 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
           tableName: layer.layerId,
         };
         restEntities.push(restEntity);
+        logger.log(
+          `[DynamicRestModule] generate ${layer.layerId} with ${
+            restEntityColumns.length
+          } columns, path = ${layer.url}`,
+        );
       }
     }
     return restEntities;
