@@ -31,7 +31,7 @@ export class SYSColumnEntity {
 
   @Column({ name: 'Table', type: 'varchar' })
   table: string;
-  @JoinColumn({ name: 'JoinTable' })
+  @JoinColumn({ name: 'Table' })
   @ManyToOne(() => LayerEntity, { onDelete: 'CASCADE' })
   tableRef: LayerEntity;
   @Column({ name: 'Alias', nullable: true, type: 'nvarchar', length: 255 })
