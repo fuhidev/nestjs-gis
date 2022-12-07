@@ -14,7 +14,7 @@ export interface ColumnEntity {
   layerId: string;
   layer: LayerEntity;
 }
-@Entity('SYS_Column', { synchronize: false })
+@Entity('SYS_Column')
 export class SYSColumnEntity {
   @Column({
     name: 'ID',
