@@ -29,23 +29,23 @@ export class SYSColumnEntity {
   })
   id: number;
 
-  @Column({ name: 'Table' })
+  @Column({ name: 'Table', type: 'varchar' })
   table: string;
   @JoinColumn({ name: 'JoinTable' })
   @ManyToOne(() => LayerEntity, { onDelete: 'CASCADE' })
   tableRef: LayerEntity;
-  @Column({ name: 'Alias', nullable: true })
+  @Column({ name: 'Alias', nullable: true, type: 'nvarchar', length: 255 })
   alias: string;
   @Column({ name: 'Column', type: 'nvarchar', length: 255 })
   column: string;
   @Column({ name: 'IsDisplay', nullable: true, default: false })
   isDisplay: boolean;
-  @Column({ name: 'JoinTable', length: 255, nullable: true })
+  @Column({ name: 'JoinTable', type: 'varchar', length: 255, nullable: true })
   joinTable: string;
   @JoinColumn({ name: 'JoinTable' })
   @ManyToOne(() => LayerEntity, { onDelete: 'SET NULL' })
   joinTableRef: LayerEntity;
-  @Column({ name: 'JoinType', length: 100, nullable: true })
+  @Column({ name: 'JoinType', type: 'varchar', length: 100, nullable: true })
   joinType: 'one-to-one' | 'one-to-many' | 'many-to-one';
 
   ai?: boolean;
