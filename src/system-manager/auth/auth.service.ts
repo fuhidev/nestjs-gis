@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { compareSync } from 'bcrypt';
 import { EntityManager, getRepository } from 'typeorm';
+import { LayerService } from '../layer';
 import { systemManagerOption } from '../system-manager.token';
 import { UserStatusEnum } from '../user/user.constant';
 import { UserEntity } from '../user/user.entity';
@@ -13,6 +14,7 @@ export class AuthService {
     private userService: UserService,
     private jwtService: JwtService,
     @InjectEntityManager() private entityManager: EntityManager,
+    private layerService: LayerService,
   ) {}
   verifyToken(token: string) {
     try {
@@ -158,20 +160,14 @@ export class AuthService {
       delete r.isApi;
     });
     return result;
-    // return user.role.layers.forEach((roleLayer) => {
-    //   const layer = roleLayer.layer;
-    //   return {
-    //     layerId: layer.layerId,
-    //     layerName: layer.layerName,
-    //     isView: roleLayer.isView,
-    //     isCreate: roleLayer.isCreate,
-    //     isDelete: roleLayer.isDelete,
-    //     isEdit: roleLayer.isEdit,
-    //     definition: roleLayer.definition,
-    //     url: layer.url,
-    //     isVisible: true,
-    //     dataset: layer.dataset,
-    //   };
-    // });
+  }
+  async getLayerInfosAnonymous(params: { username: string }) {
+    const response = await this.layerService.find({ relations: ['dataset'] });
+    response.forEach(layerEntity => {
+      if (layerEntity.isApi) {
+        layerEntity.url = systemManagerOption.host + '/' + layerEntity.url;
+      }
+    });
+    return response;
   }
 }
