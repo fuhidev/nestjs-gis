@@ -45,7 +45,7 @@ export class SYSColumnEntity {
   @JoinColumn({ name: 'JoinTable' })
   @ManyToOne(() => LayerEntity, { onDelete: 'SET NULL' })
   joinTableRef: LayerEntity;
-  @Column({ name: 'JoinType', type: 'nvarchar', length: 100, nullable: true })
+  @Column({ name: 'JoinType', length: 100, nullable: true })
   joinType: 'one-to-one' | 'one-to-many' | 'many-to-one';
 
   ai?: boolean;
