@@ -53,6 +53,7 @@ export class LayerEntity {
     type: 'nvarchar',
     length: 'MAX',
     nullable: true,
+    default: '{}',
     transformer: {
       from: value => {
         if (value && typeof value === 'string') {

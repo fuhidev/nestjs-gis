@@ -3,7 +3,7 @@ import {
   CreateManyDto,
   CrudRequest,
   CrudRequestOptions,
-  GetManyDefaultResponse
+  GetManyDefaultResponse,
 } from '@nestjsx/crud';
 import { TypeOrmCrudService as BaseTypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import * as arcgis from 'terraformer-arcgis-parser';
@@ -20,7 +20,7 @@ import {
   GetCountGroupParam,
   GISCrudRequest,
   GISParsedRequestParams,
-  SpatialMethodEnum
+  SpatialMethodEnum,
 } from './typeorm.interface';
 
 export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
@@ -291,6 +291,18 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
       if (this.isEsriClass(primaryCol)) {
         const objectId = await this.generateEsriObjectId();
         dto[primaryCol.propertyName] = objectId;
+      } else {
+        // trường hợp fix objectId không phải là khóa chính (có một thuộc tính khác làm khóa chính ảo)
+        for (const column of this.repo.metadata.columns) {
+          if (column.propertyName !== primaryCol.propertyName) {
+            if (this.isEsriClass(column)) {
+              try {
+                dto[column.propertyName] = await this.generateEsriObjectId();
+              } catch (error) {}
+              break;
+            }
+          }
+        }
       }
     }
 

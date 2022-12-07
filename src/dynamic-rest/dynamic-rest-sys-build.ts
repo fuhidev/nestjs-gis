@@ -43,6 +43,7 @@ export async function convertSysLayer2RestEntities(p: { con: Connection }) {
         'layerId = lyr.layerId',
         'url = lyr.url',
         'geometryType=lyr.geometryType',
+        'primaryColumn = lyr.primaryColumn'
       ])
       .getRawMany();
     logger.log(`Found ${layerEntities.length} Layer`);
