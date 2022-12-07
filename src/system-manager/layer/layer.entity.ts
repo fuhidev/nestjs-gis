@@ -1,14 +1,13 @@
 import {
-  Entity,
-  PrimaryColumn,
   Column,
-  ManyToOne,
+  Entity,
   JoinColumn,
+  ManyToOne,
   OneToMany,
-  BeforeUpdate,
+  PrimaryColumn,
 } from 'typeorm';
-import { DatasetEntity } from '../dataset/dataset.entity';
 import { ColumnEntity } from '../column/column.entity';
+import { DatasetEntity } from '../dataset/dataset.entity';
 import { RoleLayerEntity } from '../role-layer/role-layer.entity';
 
 @Entity({
@@ -40,6 +39,14 @@ export class LayerEntity {
 
   @OneToMany(() => RoleLayerEntity, e => e.layer)
   roles: RoleLayerEntity[];
+
+  @Column({
+    name: 'PrimaryColumn',
+    type: 'nvarchar',
+    length: 255,
+    nullable: true,
+  })
+  primaryColumn?: string;
 
   @Column({
     name: 'Config',
