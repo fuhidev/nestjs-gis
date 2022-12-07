@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   HttpCode,
-  NotFoundException,
   Param,
   Post,
   Request,
@@ -73,9 +72,8 @@ export class AuthController {
     return response;
   }
   @Get('layerinfos/anonymous')
-  @UseInterceptors(new CrudRequestInterceptor())
-  async getLayerInfoAnonymouses(@Request() @ParsedRequest() req: CrudRequest) {
-    const response = await this.layerService.find({ relations: ['dataset'] });
+  async getLayerInfoAnonymouses() {
+    const response = await this.authService.getLayerInfosAnonymous();
     return response;
   }
 
@@ -95,8 +93,7 @@ export class AuthController {
     };
     logEntity.userId = req.user.userId;
 
-    logEntity.description =
-      'Truy cập ứng dụng ' +  application.applicationName;
+    logEntity.description = 'Truy cập ứng dụng ' + application.applicationName;
     await this.logService.repo.save(logEntity);
     const isAccess = this.authService.isAccess({
       username: req.user.username,

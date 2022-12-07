@@ -161,7 +161,7 @@ export class AuthService {
     });
     return result;
   }
-  async getLayerInfosAnonymous(params: { username: string }) {
+  async getLayerInfosAnonymous() {
     const response = await this.layerService.find({ relations: ['dataset'] });
     response.forEach(layerEntity => {
       if (layerEntity.isApi) {
