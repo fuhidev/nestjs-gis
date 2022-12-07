@@ -1,7 +1,7 @@
-import { Entity, Column, TableColumn } from 'typeorm';
-import { LayerEntity } from '../layer/layer.entity';
-import { CodedDomainEntity } from '../coded-domain/coded-domain.entity';
+import { Column, Entity, JoinColumn, ManyToOne, TableColumn } from 'typeorm';
 import { TableColumnOptions } from 'typeorm/schema-builder/options/TableColumnOptions';
+import { CodedDomainEntity } from '../coded-domain/coded-domain.entity';
+import { LayerEntity } from '../layer/layer.entity';
 
 export interface ColumnEntity {
   id: string;
@@ -32,9 +32,12 @@ export class SYSColumnEntity {
   column: string;
   @Column({ name: 'IsDisplay' })
   isDisplay: boolean;
-  @Column()
+  @Column({ name: 'JoinTable' })
   joinTable: string;
-  @Column({ type: 'nvarchar' })
+  @JoinColumn({ name: 'JoinTable' })
+  @ManyToOne(() => LayerEntity, { onDelete: 'SET NULL' })
+  joinTableRef: LayerEntity;
+  @Column({ name: 'JoinType', type: 'nvarchar' })
   joinType: 'one-to-one' | 'one-to-many' | 'many-to-one';
 
   ai?: boolean;
