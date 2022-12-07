@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, TableColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+  TableColumn,
+} from 'typeorm';
 import { TableColumnOptions } from 'typeorm/schema-builder/options/TableColumnOptions';
 import { CodedDomainEntity } from '../coded-domain/coded-domain.entity';
 import { LayerEntity } from '../layer/layer.entity';
@@ -16,28 +23,29 @@ export interface ColumnEntity {
 }
 @Entity('SYS_Column')
 export class SYSColumnEntity {
-  @Column({
+  @PrimaryColumn({
     name: 'ID',
-    nullable: true,
-    primary: true,
     generated: 'increment',
   })
   id: number;
 
   @Column({ name: 'Table' })
   table: string;
-  @Column({ name: 'Alias' })
+  @JoinColumn({ name: 'JoinTable' })
+  @ManyToOne(() => LayerEntity, { onDelete: 'CASCADE' })
+  tableRef: LayerEntity;
+  @Column({ name: 'Alias', nullable: true })
   alias: string;
-  @Column({ name: 'Column' })
+  @Column({ name: 'Column', type: 'nvarchar', length: 255 })
   column: string;
-  @Column({ name: 'IsDisplay' })
+  @Column({ name: 'IsDisplay', nullable: true, default: false })
   isDisplay: boolean;
-  @Column({ name: 'JoinTable' })
+  @Column({ name: 'JoinTable', length: 255, nullable: true })
   joinTable: string;
   @JoinColumn({ name: 'JoinTable' })
   @ManyToOne(() => LayerEntity, { onDelete: 'SET NULL' })
   joinTableRef: LayerEntity;
-  @Column({ name: 'JoinType', type: 'nvarchar' })
+  @Column({ name: 'JoinType', type: 'nvarchar', length: 100, nullable: true })
   joinType: 'one-to-one' | 'one-to-many' | 'many-to-one';
 
   ai?: boolean;
