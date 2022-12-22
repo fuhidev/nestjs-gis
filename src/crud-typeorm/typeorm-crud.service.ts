@@ -7,7 +7,6 @@ import {
 } from '@nestjsx/crud';
 import { TypeOrmCrudService as BaseTypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import * as arcgis from 'terraformer-arcgis-parser';
-import { Geometry } from 'terraformer-arcgis-parser';
 import * as wkt from 'terraformer-wkt-parser';
 import { DeepPartial, Repository, SelectQueryBuilder } from 'typeorm';
 import { ColumnMetadata } from 'typeorm/metadata/ColumnMetadata';
@@ -185,30 +184,39 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
     outSR: SpatialReference | number,
     fgeo: string,
   ) {
-    const geometries: Array<Geometry> = [];
     const geoColumn = this.getGeometryColumn();
     if (!geoColumn.spatialFeatureType)
       throw new Error(
         'Không xác định được spatialFeatureType của column' +
           geoColumn.propertyName,
       );
-    for (const d of data) {
-      geometries.push(d[geoColumn.propertyName]);
-    }
-    if (!this.equalSrs(outSR, moduleOptions.srs)) {
+    const pGeoNotNulls: Array<{
+      idx: number;
+      geometry: arcgis.Geometry;
+    }> = [];
+    data.forEach((d, idx) => {
+      const geo = d[geoColumn.propertyName];
+      if (geo !== null && geo !== undefined) {
+        pGeoNotNulls.push({
+          idx: idx,
+          geometry: geo,
+        });
+      }
+    });
+
+    if (!this.equalSrs(outSR, moduleOptions.srs) && pGeoNotNulls.length) {
       const pGeometries = (await this.geometryService.project({
         outSR: outSR,
         geometryType: geoColumn.spatialFeatureType as GeometryTypeEnum,
-        geometries,
+        geometries: pGeoNotNulls.map(m => m.geometry),
       })).geometries;
 
-      let index = 0;
-      pGeometries.forEach(pgeo => {
-        let gData = data[index];
+      pGeoNotNulls.forEach((pgeo, idx) => {
+        let gData = data[pgeo.idx];
         if (gData[geoColumn.propertyName]) {
-          gData[geoColumn.propertyName] = pgeo;
+          const geom = pGeometries[idx];
+          gData[geoColumn.propertyName] = geom;
         }
-        index++;
       });
     }
 
