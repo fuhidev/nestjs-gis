@@ -1,14 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { Geometry, SpatialReferenceWkt } from 'terraformer-arcgis-parser';
+import { Injectable } from '@nestjs/common';
+import { GeometryObject } from 'geojson';
 import fetch from 'node-fetch';
+import * as arcgis from 'terraformer-arcgis-parser';
+import { Geometry } from 'terraformer-arcgis-parser';
+import { moduleOptions } from '../../token';
+import { GeometryTypeEnum } from '../arcgis';
 import {
   ProjectGeometryGeojsonParams,
   ProjectGeometryParams,
 } from './project-geometry.interface';
-import * as arcgis from 'terraformer-arcgis-parser';
-import { GeometryObject } from 'geojson';
-import { moduleOptions } from '../../token';
-import { GeometryTypeEnum } from '../arcgis';
 @Injectable()
 export class ProjectGeometryService {
   get options() {
@@ -24,9 +24,9 @@ export class ProjectGeometryService {
     const geometryType =
       firstGeo.type === 'Point'
         ? GeometryTypeEnum.Point
-        : firstGeo.type === 'LineString'
+        : firstGeo.type === 'LineString' || firstGeo.type === 'MultiLineString'
         ? GeometryTypeEnum.Polyline
-        : firstGeo.type === 'Polygon'
+        : firstGeo.type === 'Polygon' || firstGeo.type === 'MultiPolygon'
         ? GeometryTypeEnum.Polygon
         : null;
     const arcgisGeometries = geometries.map(geo => arcgis.convert(geo));
