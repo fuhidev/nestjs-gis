@@ -22,7 +22,7 @@ export class ProjectGeometryService {
     const { inSR, outSR, geometries } = params;
     const firstGeo = geometries[0];
     const geometryType =
-      firstGeo.type === 'Point'
+      firstGeo.type === 'Point' || firstGeo.type === 'MultiPoint'
         ? GeometryTypeEnum.Point
         : firstGeo.type === 'LineString' || firstGeo.type === 'MultiLineString'
         ? GeometryTypeEnum.Polyline
