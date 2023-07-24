@@ -145,7 +145,7 @@ export class AuthService {
       .addOrderBy('lr.stt', 'ASC')
       .getRawMany();
     result.forEach(r => {
-      if (r.isApi) {
+      if (r.isApi || (!r.isApi && !r.url.startsWith('http'))) {
         r.url = systemManagerOption.host + '/' + r.url;
       }
       r.dataset = {
@@ -164,7 +164,10 @@ export class AuthService {
   async getLayerInfosAnonymous() {
     const response = await this.layerService.find({ relations: ['dataset'] });
     response.forEach(layerEntity => {
-      if (layerEntity.isApi) {
+      if (
+        layerEntity.isApi ||
+        (!layerEntity.isApi && !layerEntity.url.startsWith('http'))
+      ) {
         layerEntity.url = systemManagerOption.host + '/' + layerEntity.url;
       }
     });
