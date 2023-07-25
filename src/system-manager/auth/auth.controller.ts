@@ -42,7 +42,7 @@ export class AuthController {
         logEntity.applicationId = req.body.appId;
         const isAccess = await this.authService.isAccessRequest({
           idApp: req.body.appId,
-          userId: response.username,
+          userId: response.userId,
         });
         if (!isAccess) {
           throw new UnauthorizedException('Không có quyền truy cập ứng dụng');
