@@ -15,19 +15,18 @@ import {
   ParsedRequest,
 } from '@nestjsx/crud';
 import { ApplicationService } from '../application/application.service';
-import { LayerService } from '../layer/layer.service';
 import { LoggerActionTypeEnum } from '../logger/logger.interface';
 import { LoggerService } from '../logger/logger.service';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LocalAuthGuard } from './local-auth.guard';
+import { UserId } from './user.decorator';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private logService: LoggerService,
-    private layerService: LayerService,
     private applicationService: ApplicationService,
   ) {}
   @UseGuards(LocalAuthGuard)
@@ -41,9 +40,9 @@ export class AuthController {
       logEntity.userId = response.userId;
       if (req.body.appId) {
         logEntity.applicationId = req.body.appId;
-        const isAccess = await this.authService.isAccess({
+        const isAccess = await this.authService.isAccessRequest({
           idApp: req.body.appId,
-          username: response.username,
+          userId: response.username,
         });
         if (!isAccess) {
           throw new UnauthorizedException('Không có quyền truy cập ứng dụng');
@@ -79,30 +78,8 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @Get('isaccess/:idApp')
-  async isAccessApp(@Request() req, @Param('idApp') idApp: string) {
-    const application = await this.applicationService.findOne(idApp, {
-      select: ['applicationName'],
-    });
-    if (!application) {
-      throw new UnauthorizedException('Không tồn tại ứng dụng');
-    }
-    const logEntity = this.logService.repo.create();
-    logEntity.actionType = {
-      id: LoggerActionTypeEnum.ACCESS,
-      name: 'Truy cập',
-    };
-    logEntity.userId = req.user.userId;
-
-    logEntity.description = 'Truy cập ứng dụng ' + application.applicationName;
-    await this.logService.repo.save(logEntity);
-    const isAccess = this.authService.isAccess({
-      username: req.user.username,
-      idApp,
-    });
-    logEntity.note = isAccess
-      ? 'Truy cập thành công'
-      : 'Truy cập không thành công';
-    return isAccess;
+  async isAccessApp(@UserId() userId: string, @Param('idApp') idApp: string) {
+    return this.authService.isAccess({ idApp, userId });
   }
 
   @UseGuards(JwtAuthGuard)

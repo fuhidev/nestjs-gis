@@ -3,7 +3,10 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { compareSync } from 'bcrypt';
 import { EntityManager, getRepository } from 'typeorm';
+import { ApplicationService } from '../application';
 import { LayerService } from '../layer';
+import { LoggerActionTypeEnum } from '../logger/logger.interface';
+import { LoggerService } from '../logger/logger.service';
 import { systemManagerOption } from '../system-manager.token';
 import { UserStatusEnum } from '../user/user.constant';
 import { UserEntity } from '../user/user.entity';
@@ -15,6 +18,8 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectEntityManager() private entityManager: EntityManager,
     private layerService: LayerService,
+    private applicationService: ApplicationService,
+    private logService: LoggerService,
   ) {}
   verifyToken(token: string) {
     try {
@@ -91,11 +96,11 @@ export class AuthService {
   /**
    * Kiểm tra quyền truy cập của tài khoản
    */
-  async isAccess(params: { idApp: string; username: string }) {
-    const { idApp, username } = params;
+  async isAccessRequest(params: { idApp: string; userId: string }) {
+    const { idApp, userId } = params;
     const user = await this.userService.findOne(
       {
-        username,
+        userId,
       },
       {
         relations: ['role', 'role.applications'],
@@ -169,5 +174,40 @@ export class AuthService {
       }
     });
     return response;
+  }
+
+  async isAccess(params: { idApp: string; userId: string }) {
+    if (params.userId) {
+      throw new UnauthorizedException();
+    }
+    try {
+      const application = await this.applicationService.findOne(params.idApp, {
+        select: ['applicationName'],
+      });
+      if (!application) {
+        throw new UnauthorizedException('Không tồn tại ứng dụng');
+      }
+      const logEntity = this.logService.repo.create();
+      logEntity.actionType = {
+        id: LoggerActionTypeEnum.ACCESS,
+        name: 'Truy cập',
+      };
+      logEntity.userId = params.userId;
+
+      logEntity.description =
+        'Truy cập ứng dụng ' + application.applicationName;
+      await this.logService.repo.save(logEntity);
+
+      const isAccess = this.isAccessRequest({
+        userId: params.userId,
+        idApp: params.idApp,
+      });
+      logEntity.note = isAccess
+        ? 'Truy cập thành công'
+        : 'Truy cập không thành công';
+      return isAccess;
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
   }
 }
