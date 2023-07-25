@@ -180,7 +180,7 @@ export class AuthService {
   }
 
   async isAccess(params: { idApp: string; userId: string }) {
-    if (params.userId) {
+    if (!params.userId) {
       throw new UnauthorizedException();
     }
     try {
