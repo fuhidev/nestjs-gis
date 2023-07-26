@@ -13,10 +13,10 @@ import {
   CRUD_OPTIONS_METADATA,
   PARSED_CRUD_REQUEST_KEY,
 } from '@nestjsx/crud/lib/constants';
-import { GISCrudRequestInterceptor } from './gis-crud-request.interceptor';
+import { Response } from 'express';
 import * as geojson2shp from 'geojson2shp';
 import { GISCrudRequest } from 'src/geometry';
-import { Response } from 'express';
+import { GISCrudRequestInterceptor } from './gis-crud-request.interceptor';
 export class GISCrudRoutesFactory {
   private options: MergedCrudOptions;
   constructor(private target) {}
@@ -125,12 +125,12 @@ export class GISCrudRoutesFactory {
       'getCountBase',
       'getSumBase',
     ].forEach(route => {
-      this.canCreateRoute(route);
-      Reflect.defineMetadata(
-        INTERCEPTORS_METADATA,
-        [GISCrudRequestInterceptor, CrudResponseInterceptor],
-        this.target.prototype[route],
-      );
+      if (this.canCreateRoute(route))
+        Reflect.defineMetadata(
+          INTERCEPTORS_METADATA,
+          [GISCrudRequestInterceptor, CrudResponseInterceptor],
+          this.target.prototype[route],
+        );
     });
   }
 
