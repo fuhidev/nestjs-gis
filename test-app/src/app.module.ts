@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
-  ArcgisProxyModule,
   GeometryModule,
   systemEntities,
   SystemManagerModule,
@@ -9,6 +8,7 @@ import {
 import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerConnectionOptions';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { CayXanhModule } from './cay-xanh/cay-xanh.module';
 
 const dbConfig: SqlServerConnectionOptions = {
   options: { encrypt: false },
@@ -41,14 +41,14 @@ const dbConfig: SqlServerConnectionOptions = {
       // },
       // },
     }),
-    ArcgisProxyModule.forRoot({
-      arcUrl: 'http://ditagis.com/arcgis',
-      route: 'arcgis',
-      user: {
-        username: 'backendproxy',
-        password: 'backendproxy@123',
-      },
-    }),
+    // ArcgisProxyModule.forRoot({
+    //   arcUrl: 'http://ditagis.com/arcgis',
+    //   route: 'arcgis',
+    //   user: {
+    //     username: 'backendproxy',
+    //     password: 'backendproxy@123',
+    //   },
+    // }),
     // ArcgisProxyModule.forRoot({
     //   arcUrl: 'http://ditagis.com/arcgis',
     //   route: 'ditagis',
@@ -59,7 +59,7 @@ const dbConfig: SqlServerConnectionOptions = {
       },
       host: 'http://localhost:3000',
     }),
-
+    CayXanhModule,
     // DynamicRestModule.fromSys({
     //   dbConfig: { ...dbConfig, name: 'fromsys' },
     // }),

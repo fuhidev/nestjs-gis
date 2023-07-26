@@ -97,6 +97,7 @@ export class GISCrudRoutesFactory {
   }
 
   private canCreateRoute(name: string) {
+    if (name === 'getManyBasePost') name = 'getManyBase';
     const only = this.options.routes.only;
     const exclude = this.options.routes.exclude;
 
@@ -124,12 +125,12 @@ export class GISCrudRoutesFactory {
       'getCountBase',
       'getSumBase',
     ].forEach(route => {
-      this.canCreateRoute(route);
-      Reflect.defineMetadata(
-        INTERCEPTORS_METADATA,
-        [GISCrudRequestInterceptor, CrudResponseInterceptor],
-        this.target.prototype[route],
-      );
+      if (this.canCreateRoute(route))
+        Reflect.defineMetadata(
+          INTERCEPTORS_METADATA,
+          [GISCrudRequestInterceptor, CrudResponseInterceptor],
+          this.target.prototype[route],
+        );
     });
   }
 
