@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
+  DynamicRestModule,
   GeometryModule,
   systemEntities,
   SystemManagerModule,
@@ -60,9 +61,9 @@ const dbConfig: SqlServerConnectionOptions = {
       host: 'http://localhost:3000',
     }),
     CayXanhModule,
-    // DynamicRestModule.fromSys({
-    //   dbConfig: { ...dbConfig, name: 'fromsys' },
-    // }),
+    DynamicRestModule.fromSys({
+      dbConfig: { ...dbConfig, name: 'fromsys' },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
