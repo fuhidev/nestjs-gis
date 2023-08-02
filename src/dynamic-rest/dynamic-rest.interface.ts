@@ -1,7 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { ColumnOptions } from '../typeorm/decorators/column';
-import { JoinColumnOptions, RelationOptions } from 'typeorm';
 import { CrudOptions } from '@nestjsx/crud';
+import { JoinColumnOptions, RelationOptions } from 'typeorm';
+import { ColumnOptions } from '../typeorm/decorators/column';
 
 export interface RestEntityColumn extends ColumnOptions {
   propertyName: string;
@@ -29,4 +29,11 @@ export interface DynamicRestOptions {
 export interface DynamicRestFromSysOptions {
   sysDbName?: string;
   dbConfig: TypeOrmModuleOptions;
+}
+
+export interface ITableColumn {
+  name: string;
+  table: string;
+  isPrimary: 0 | 1;
+  type: string;
 }
