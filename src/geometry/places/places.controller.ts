@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { PlacesService } from './places.service';
 
 @Controller('services/geometry/places')
@@ -9,8 +9,8 @@ export class PlacesController {
     return this.service.coordinatesToAddress({ lat, lng });
   }
   @Get('search')
-  search(@Query('q') q) {
-    return this.service.addressToCoordinates({ searchText: q });
+  search(@Query() q) {
+    return this.service.addressToCoordinates({ query: q });
   }
 
   @Get('findPointAddress')
