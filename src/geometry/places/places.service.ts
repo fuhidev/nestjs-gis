@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { FeatureCollection } from 'geojson';
 import fetch from 'node-fetch';
-const bbox =
-  '101.82119497000616,22.580776616399675,108.77717293941981,9.516585106276878';
 
 @Injectable()
 export class PlacesService {
@@ -19,10 +17,16 @@ export class PlacesService {
   }
 
   addressToCoordinates(params: {
-    searchText: string;
+    query: any;
   }): Promise<FeatureCollection<any>> {
-    const { searchText } = params;
-    const url = `https://nominatim.openstreetmap.org/search?q=${searchText}&format=geojson&countrycodes=vn&limit=20&viewbox=${bbox}&bounded=1`;
+    const { query } = params;
+    const qParam = new URLSearchParams({
+      ...query,
+      format: 'geojson',
+      countrycodes: 'vn',
+      bounded: 1,
+    }).toString();
+    const url = `https://nominatim.openstreetmap.org/search?${qParam}`;
     return fetch(url).then(r => r.json());
   }
 
