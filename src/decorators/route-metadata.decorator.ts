@@ -1,10 +1,10 @@
 import { Get } from '@nestjs/common';
 import { PATH_METADATA } from '@nestjs/common/constants';
 import { CRUD_OPTIONS_METADATA } from '@nestjsx/crud/lib/constants';
-import { ColumnOptions } from '../typeorm/decorators/column';
 import { getMetadataArgsStorage, getRepository, Repository } from 'typeorm';
 import { LayerEntity } from '../system-manager';
 import { moduleOptions } from '../token';
+import { ColumnOptions } from '../typeorm/decorators/column';
 export const CONTROLLER_PATH_ENTITY = 'CONTROLLER_PATH_ENTITY';
 export interface Relation {
   displayColumn: string;
@@ -192,9 +192,9 @@ export class RouteMedataFactory {
         );
       }
       try {
-        const layerEntity = await getRepository(LayerEntity).findOne(
-          repo.metadata.tableName,
-        );
+        const layerEntity = await getRepository(LayerEntity).findOne({
+          where: { layerId: repo.metadata.tableName },
+        });
         if (layerEntity) {
           const config = layerEntity.config as any;
           result.layerConfig = config;

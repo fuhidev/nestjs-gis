@@ -16,9 +16,9 @@ import { ProjectGeometryService } from '../geometry/project-geometry/project-geo
 import { moduleOptions } from '../token';
 import {
   FilterGeoBody,
-  GetCountGroupParam,
   GISCrudRequest,
   GISParsedRequestParams,
+  GetCountGroupParam,
   SpatialMethodEnum,
 } from './typeorm.interface';
 
@@ -313,12 +313,10 @@ export class GISTypeOrmCrudService<T> extends BaseTypeOrmCrudService<T> {
         }
       }
     }
-
-    const primaryKeyVal = dto[this.getPrimaryParam(req.options)] as
-      | string
-      | number;
+    const primaryField = this.getPrimaryParam(req.options);
+    const primaryKeyVal = dto[primaryField] as string | number;
     if (primaryKeyVal !== undefined) {
-      entity = await this.repo.findOne(primaryKeyVal);
+      entity = await this.repo.findOne({ [primaryField]: primaryKeyVal });
       if (entity) {
         throw new BadRequestException('Đã tồn tại khóa chính');
       }

@@ -4,14 +4,13 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
-import { UserEntity } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CrudRequest } from '@nestjsx/crud';
-import { DeepPartial } from 'typeorm';
-import { RoleEntity } from '../role/role.entity';
-import { hash } from '../auth.util';
+import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import { compareSync } from 'bcrypt';
+import { hash } from '../auth.util';
+import { RoleEntity } from '../role/role.entity';
+import { UserEntity } from './user.entity';
 @Injectable()
 export class UserService extends TypeOrmCrudService<UserEntity> {
   constructor(@InjectRepository(UserEntity) repo) {
@@ -20,7 +19,7 @@ export class UserService extends TypeOrmCrudService<UserEntity> {
 
   async create(user: UserEntity) {
     // kiểm tra trùng user
-    const count = await this.repo.count({ username: user.username });
+    const count = await this.repo.countBy({ username: user.username });
     if (count > 0) {
       throw new BadRequestException(
         `Tài khoản ${user.username} đã tồn tại trong hệ thống`,
@@ -50,10 +49,10 @@ export class UserService extends TypeOrmCrudService<UserEntity> {
     newPassword: string;
   }) {
     const { currentPassword, newPassword, userSessionId } = params;
-    let isCoQuyen = false;
     // neu quyen quan tri se duoc phep doi mat khau
     // neu khong thi chi nguoi dung moi duoc phep doi mat khau
-    const user = await this.repo.findOne(userSessionId, {
+    const user = await this.repo.findOne({
+      where: { userId: userSessionId },
       select: ['password'],
     });
     if (!user) {
@@ -77,11 +76,14 @@ export class UserService extends TypeOrmCrudService<UserEntity> {
     let isCoQuyen = false;
     // neu quyen quan tri se duoc phep doi mat khau
     // neu khong thi chi nguoi dung moi duoc phep doi mat khau
-    const user = await this.repo.findOne(userId, { select: ['password'] });
+    const user = await this.repo.findOne({
+      where: { userId },
+      select: ['password'],
+    });
     if (!user) {
       throw new NotFoundException();
     }
-    const builder = await this.repo
+    const builder = this.repo
       .createQueryBuilder('s')
       .innerJoin(
         qb =>

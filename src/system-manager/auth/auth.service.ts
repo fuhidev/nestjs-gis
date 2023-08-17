@@ -34,13 +34,11 @@ export class AuthService {
       userId: '',
       roleId: '',
     } as UserEntity;
-    const user = await this.userService.findOne(
-      { username },
-      {
-        select: ['password', 'displayName', 'userId', 'statusId', 'roleId'],
-        relations: ['role'],
-      },
-    );
+    const user = await this.userService.findOne({
+      where: { username },
+      select: ['password', 'displayName', 'userId', 'statusId', 'roleId'],
+      relations: ['role'],
+    });
 
     if (user && compareSync(password, user.password)) {
       if (user.statusId === UserStatusEnum.Locked) {
@@ -77,7 +75,8 @@ export class AuthService {
   }
 
   async refreshToken(userId: string) {
-    const payload = await this.userService.findOne(userId, {
+    const payload = await this.userService.findOne({
+      where: { userId },
       select: ['username', 'displayName'],
     });
     return {
@@ -98,14 +97,13 @@ export class AuthService {
    */
   async isAccessRequest(params: { idApp: string; userId: string }) {
     const { idApp, userId } = params;
-    const user = await this.userService.findOne(
-      {
+    const user = await this.userService.findOne({
+      where: {
         userId,
       },
-      {
-        relations: ['role', 'role.applications'],
-      },
-    );
+      select: ['role', 'userId'],
+      relations: ['role', 'role.applications'],
+    });
     return user.role.applications.some(
       f => f.applicationId === idApp && f.isEnabled,
     );
@@ -184,7 +182,8 @@ export class AuthService {
       throw new UnauthorizedException();
     }
     try {
-      const application = await this.applicationService.findOne(params.idApp, {
+      const application = await this.applicationService.findOne({
+        where: { applicationId: params.idApp },
         select: ['applicationName'],
       });
       if (!application) {

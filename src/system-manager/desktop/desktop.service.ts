@@ -11,19 +11,17 @@ export class DesktopService {
 
   async getLayerInfos(params: { username: string }) {
     const { username } = params;
-    const user = await this.service.findOne(
-      {
+    const user = await this.service.findOne({
+      where: {
         username,
       },
-      {
-        relations: [
-          'role',
-          'role.layers',
-          'role.layers.layer',
-          'role.layers.layer.dataset',
-        ],
-      },
-    );
+      relations: [
+        'role',
+        'role.layers',
+        'role.layers.layer',
+        'role.layers.layer.dataset',
+      ],
+    });
     return user.role.layers.map(roleLayer => {
       const layer = roleLayer.layer;
       return {

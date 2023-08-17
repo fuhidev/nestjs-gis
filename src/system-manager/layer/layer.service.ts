@@ -1,29 +1,28 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
-import { LayerEntity } from './layer.entity';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import {
-  InjectRepository,
-  InjectEntityManager,
   InjectConnection,
+  InjectEntityManager,
+  InjectRepository,
 } from '@nestjs/typeorm';
+import { CreateManyDto, CrudRequest } from '@nestjsx/crud';
+import { TypeOrmCrudService } from '@nestjsx/crud-typeorm';
 import {
-  EntityManager,
-  DeepPartial,
-  QueryRunner,
   Connection,
-  Table,
-  TableColumn,
+  DeepPartial,
+  EntityManager,
+  QueryRunner,
   Repository,
+  Table,
 } from 'typeorm';
-import { CrudRequest, CreateManyDto } from '@nestjsx/crud';
+import { TableOptions } from 'typeorm/schema-builder/options/TableOptions';
+import { GeometryTypeEnum } from '../../geometry';
+import { getDatabaseName } from '../../utils/database.util';
 import {
   ColumnEntity,
   SYSColumnEntity,
   TableSysColumn,
 } from '../column/column.entity';
-import { getDatabaseName } from '../../utils/database.util';
-import { TableOptions } from 'typeorm/schema-builder/options/TableOptions';
-import { GeometryTypeEnum } from '../../geometry';
+import { LayerEntity } from './layer.entity';
 
 @Injectable()
 export class LayerService extends TypeOrmCrudService<LayerEntity> {
@@ -428,7 +427,7 @@ where
         column: p.column,
         table: p.table,
       });
-      await this.columnRepo.delete(columnEntity);
+      await this.columnRepo.delete(columnEntity.id);
       return {
         message: `Xóa thành công column ${p.column} của table ${p.table}`,
       };
@@ -470,7 +469,7 @@ where
           }
 
           if (Object.keys(updateEntity).length) {
-            await this.columnRepo.update(columnEntity, updateEntity);
+            await this.columnRepo.update(columnEntity.id, updateEntity);
           }
         } catch (error) {}
       } catch (error) {}
@@ -552,8 +551,10 @@ where
 
   async getColumnEntity(p: { table: string; column: string }) {
     let columnEntity = await this.columnRepo.findOne({
-      table: p.table,
-      column: p.column,
+      where: {
+        table: p.table,
+        column: p.column,
+      },
     });
     if (!columnEntity) {
       columnEntity = await this.columnRepo.save(p);
@@ -571,7 +572,8 @@ where
   }): Promise<{ message: string }> {
     const { layerId, geometryType } = p;
     await this.hasTableOrFailed({ tableName: layerId });
-    const layer = await this.repo.findOne(layerId, {
+    const layer = await this.repo.findOne({
+      where: { layerId },
       select: ['geometryType', 'layerId'],
     });
     if (!layer) {
