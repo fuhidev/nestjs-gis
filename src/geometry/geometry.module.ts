@@ -1,16 +1,15 @@
 import { DynamicModule, Module } from '@nestjs/common';
+import { GeometryModuleOptions, setOptions } from '../token';
+import { GeometryController } from './geometry.controller';
 import { GeometryService } from './geometry.service';
 import { PlacesModule } from './places/places.module';
 import { ProjectGeometryModule } from './project-geometry/project-geometry.module';
-import { GeometryModuleOptions, setOptions } from '../token';
-import { GeometryController } from './geometry.controller';
-import { ImportExcelModule } from '../import-excel/import-excel.module';
 
 @Module({
-  imports: [ProjectGeometryModule, PlacesModule,ImportExcelModule],
+  imports: [ProjectGeometryModule, PlacesModule],
   providers: [GeometryService],
   exports: [GeometryService],
-  controllers:[GeometryController]
+  controllers: [GeometryController],
 })
 export class GeometryModule {
   static forRoot(options: GeometryModuleOptions): DynamicModule {

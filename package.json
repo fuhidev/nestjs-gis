@@ -1,56 +1,40 @@
 {
-  "name": "nestjs-gis",
-  "version": "5.2.0",
-  "description": "NestJS npm package starter",
-  "author": "John Biundo <johnfbiundo@gmail.com>",
-  "license": "MIT",
-  "readmeFilename": "README.md",
-  "main": "dist/index.js",
+  "name": "@gis/nestjs",
+  "version": "1.0.0",
   "files": [
     "dist/**/*",
     "*.md"
   ],
   "scripts": {
     "start:dev": "tsc -w",
-    "build": "tsc",
-    "prepare": "npm run build",
+    "build": "npx vite build",
     "format": "prettier --write \"src/**/*.ts\"",
-    "lint": "tslint -p tsconfig.json -c tslint.json",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "lint": "tslint -p tsconfig.json -c tslint.json"
   },
-  "keywords": [
-    "nestjs"
-  ],
+  "main": "./dist/gisjs.js",
+  "module": "./dist/gisjs.mjs",
+  "typings": "./dist/gisjs.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/gisjs.mjs",
+      "require": "./dist/gisjs.js"
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/nestjsplus/nestjs-package-starter"
-  },
-  "bugs": "https://github.com/nestjsplus/nestjs-package-starter",
   "peerDependencies": {
     "@nestjs/common": ">=6.0.0",
     "@nestjs/jwt": ">=6.0.0",
-    "@nestjs/passport": ">=6.0.0",
     "@nestjsx/crud": ">=4.6.0",
     "@nestjsx/crud-typeorm": ">=4.6.0",
-    "bcrypt": ">=4.0.0",
     "exceljs": ">=4.3.0",
     "geojson": ">=0.5.0",
-    "passport-local": ">=1.0.0",
     "reflect-metadata": ">=0.1.13",
     "rxjs": ">=6.0.0",
-    "terraformer-arcgis-parser": ">=1.1.0",
-    "terraformer-wkt-parser": ">=1.2.1",
     "typeorm": ">=0.2.0"
   },
   "dependencies": {
-    "bcrypt": ">=4.0.0",
-    "decompress": "^4.2.1",
     "geojson": ">=0.5.0",
     "terraformer-arcgis-parser": ">=1.1.0",
     "terraformer-wkt-parser": ">=1.2.1"
@@ -58,42 +42,24 @@
   "devDependencies": {
     "@nestjs/common": "^7.6.0",
     "@nestjs/core": "^7.6.0",
-    "@nestjs/jwt": "^7.1.0",
-    "@nestjs/passport": "^7.1.0",
-    "@nestjs/platform-express": "^7.6.0",
-    "@nestjs/testing": "6.1.1",
     "@nestjs/typeorm": "^7.0.0",
     "@nestjsx/crud": "^4.6.0",
     "@nestjsx/crud-typeorm": "^4.6.0",
-    "@types/express": "4.16.1",
-    "@types/jest": "24.0.11",
-    "@types/multer": "^1.4.7",
-    "@types/node": "11.13.4",
-    "@types/supertest": "2.0.7",
-    "bcrypt": "^5.0.1",
     "class-transformer": "^0.4.0",
     "class-validator": "^0.13.1",
-    "exceljs": "^4.3.0",
-    "geojson": "^0.5.0",
-    "jest": "24.7.1",
-    "mssql": "^6.3.1",
-    "passport": "^0.5.0",
-    "passport-jwt": "^4.0.0",
-    "passport-local": "^1.0.0",
     "prettier": "1.17.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "supertest": "4.0.2",
-    "terraformer-arcgis-parser": "^1.1.0",
-    "terraformer-wkt-parser": "^1.2.1",
-    "ts-jest": "24.0.2",
     "ts-node": "8.1.0",
     "tsc-watch": "2.2.1",
     "tsconfig-paths": "3.8.0",
     "tslint": "5.16.0",
     "typeorm": "^0.3.1",
-    "typescript": "^4.7.4"
+    "typescript": "^4.7.4",
+    "vite": "^4.4.9",
+    "vite-plugin-dts": "^3.5.2"
   },
   "jest": {
     "moduleFileExtensions": [

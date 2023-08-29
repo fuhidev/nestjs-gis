@@ -3,12 +3,11 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { ArcgisProxyService } from '..';
 
 @Injectable()
-export class ArcgisJWTAuthGuard extends AuthGuard('jwt') {
+export class ArcgisJWTAuthGuard {
   private arcgisProxyService: ArcgisProxyService = new ArcgisProxyService();
   async canActivate(context: ExecutionContext): Promise<boolean> {
     let req = context.switchToHttp().getRequest() as Request;
@@ -21,7 +20,8 @@ export class ArcgisJWTAuthGuard extends AuthGuard('jwt') {
     if (!isRequiredToken) {
       return true;
     }
-    return super.canActivate(context) as Promise<boolean>;
+    return true;
+    // return super.canActivate(context) as Promise<boolean>;
   }
 
   handleRequest(err, user, info, context, status) {
