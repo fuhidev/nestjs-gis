@@ -1,5 +1,5 @@
 {
-  "name": "@fuhidev/nestjs",
+  "name": "@fuhidev/nestjs-gis",
   "version": "1.0.0",
   "files": [
     "dist/**/*",
