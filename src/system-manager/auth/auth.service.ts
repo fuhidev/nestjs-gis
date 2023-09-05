@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectEntityManager } from '@nestjs/typeorm';
 import { compareSync } from 'bcrypt';
-import { EntityManager, getRepository } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { ApplicationService } from '../application';
 import { LayerService } from '../layer';
 import { LoggerActionTypeEnum } from '../logger/logger.interface';
@@ -119,7 +119,8 @@ export class AuthService {
 
   async getLayerInfos(params: { username: string }) {
     const { username } = params;
-    const result = await getRepository(UserEntity)
+    const result = await this.userService
+      .getRepo()
       .createQueryBuilder('usr')
       .innerJoin('usr.role', 'rl')
       .innerJoin('rl.layers', 'lyrs')

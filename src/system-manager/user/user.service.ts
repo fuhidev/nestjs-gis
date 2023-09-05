@@ -17,6 +17,10 @@ export class UserService extends TypeOrmCrudService<UserEntity> {
     super(repo);
   }
 
+  getRepo() {
+    return this.repo;
+  }
+
   async create(user: UserEntity) {
     // kiểm tra trùng user
     const count = await this.repo.countBy({ username: user.username });
