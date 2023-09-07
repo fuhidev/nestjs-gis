@@ -9,16 +9,15 @@ import {
 import { SqlServerConnectionOptions } from 'typeorm/driver/sqlserver/SqlServerConnectionOptions';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CayXanhModule } from './cay-xanh/cay-xanh.module';
 
 const dbConfig: SqlServerConnectionOptions = {
   options: { encrypt: false },
   type: 'mssql',
-  host: 'ditagis.com',
+  host: '171.244.32.245',
   port: 1433,
   username: 'sa',
   password: 'Ditagis123',
-  database: 'BinhThuanGIS',
+  database: 'LAMDONGGIS',
   synchronize: false,
   logging: false,
   entities: ['dist/**/*.entity{.ts,.js}', ...systemEntities],
@@ -60,7 +59,6 @@ const dbConfig: SqlServerConnectionOptions = {
       },
       host: 'http://localhost:3000',
     }),
-    CayXanhModule,
     DynamicRestModule.fromSys({
       dbConfig: { ...dbConfig, name: 'fromsys' },
     }),

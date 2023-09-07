@@ -21,9 +21,10 @@ export async function generateDynamicSysRest(
   const restEntities = await convertSysLayer2RestEntities({
     con,
   });
+  const restEntitiesSort = sortEntities(restEntities);
   con.close();
   return generateDynamicRest({
-    restEntities,
+    restEntities: restEntitiesSort,
     dbConfig: options.dbConfig,
   });
 }
@@ -176,4 +177,42 @@ function getRestEntity(
   };
 
   return restEntity;
+}
+
+function sortEntities(entities: RestEntity[]): RestEntity[] {
+  const entityMap: Record<string, RestEntity> = {};
+
+  // Tạo một ánh xạ giữa tên entity và entity tương ứng
+  entities.forEach(entity => {
+    entityMap[entity.tableName] = entity;
+  });
+
+  // Sắp xếp lại thứ tự dựa trên quan hệ refEntity
+  const sortedEntities: RestEntity[] = [];
+
+  entities.forEach(entity => {
+    sortEntity(entity, sortedEntities, entityMap);
+  });
+
+  return sortedEntities;
+}
+
+function sortEntity(
+  entity: RestEntity,
+  sortedEntities: RestEntity[],
+  entityMap: Record<string, RestEntity>,
+): void {
+  if (sortedEntities.includes(entity)) {
+    return;
+  }
+
+  entity.columns.forEach(column => {
+    if (column.join && entityMap[column.join.target]) {
+      // Đệ quy sắp xếp entity liên quan trước
+      sortEntity(entityMap[column.join.target], sortedEntities, entityMap);
+    }
+  });
+
+  // Sau khi đã sắp xếp các entity liên quan, thêm entity hiện tại vào danh sách sắp xếp
+  sortedEntities.push(entity);
 }

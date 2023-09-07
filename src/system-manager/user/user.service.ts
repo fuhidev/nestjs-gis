@@ -23,7 +23,7 @@ export class UserService extends TypeOrmCrudService<UserEntity> {
 
   async create(user: UserEntity) {
     // kiểm tra trùng user
-    const count = await this.repo.countBy({ username: user.username });
+    const count = await this.repo.count({ where: { username: user.username } });
     if (count > 0) {
       throw new BadRequestException(
         `Tài khoản ${user.username} đã tồn tại trong hệ thống`,
