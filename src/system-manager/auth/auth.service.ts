@@ -149,7 +149,7 @@ export class AuthService {
       .addOrderBy('lr.stt', 'ASC')
       .getRawMany();
     result.forEach(r => {
-      if (r.isApi || (!r.isApi && !r.url.startsWith('http'))) {
+      if (r.isApi || (!r.isApi && !r.url?.startsWith('http'))) {
         r.url = systemManagerOption.host + '/' + r.url;
       }
       r.dataset = {
