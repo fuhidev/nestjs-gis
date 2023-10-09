@@ -170,7 +170,7 @@ export class AuthService {
     response.forEach(layerEntity => {
       if (
         layerEntity.isApi ||
-        (!layerEntity.isApi && !layerEntity.url.startsWith('http'))
+        (!layerEntity.isApi && !layerEntity.url?.startsWith('http'))
       ) {
         layerEntity.url = systemManagerOption.host + '/' + layerEntity.url;
       }
