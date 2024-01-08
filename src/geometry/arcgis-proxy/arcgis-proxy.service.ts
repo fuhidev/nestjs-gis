@@ -77,7 +77,7 @@ export class ArcgisProxyService {
     let originalUrl = req.originalUrl;
     originalUrl = this.removeURLParameter(originalUrl, 'token');
     const arcUrl = this.getArcUrl(route);
-    originalUrl = originalUrl.replace(route, '');
+    originalUrl = originalUrl.replace(route + '/', '');
     let url = `${arcUrl}${originalUrl}`;
     return url;
   }

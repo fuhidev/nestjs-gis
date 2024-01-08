@@ -22,10 +22,6 @@ export interface GISCrudRequest extends CrudRequest {
   parsed: GISParsedRequestParams;
 }
 
-export class GISEntity extends BaseEntity {
-  objectId: number;
-}
-
 export enum SpatialMethodEnum {
   Within = 'within',
   Intersects = 'intersects',
