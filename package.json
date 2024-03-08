@@ -1,8 +1,7 @@
 {
   "name": "nestjs-gis",
-  "version": "5.4.3",
-  "description": "NestJS npm package starter",
-  "author": "John Biundo <johnfbiundo@gmail.com>",
+  "version": "5.5.0",
+  "author": "fuhi.dev<fuhi.dev@gmail.com>",
   "license": "MIT",
   "readmeFilename": "README.md",
   "main": "dist/index.js",
