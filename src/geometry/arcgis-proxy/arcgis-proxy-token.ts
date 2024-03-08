@@ -1,6 +1,7 @@
 export interface ArcgisProxyOptions {
   arcUrl: string;
   route: string;
+  host: string;
   user?: {
     username: string;
     password: string;

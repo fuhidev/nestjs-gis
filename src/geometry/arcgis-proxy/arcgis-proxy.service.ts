@@ -93,11 +93,13 @@ export class ArcgisProxyService {
         delete req.body.token;
       }
       const contentType = req.headers['content-type'];
-      headers.append('content-type', contentType);
-      if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
-        options.body = this.formUrlEncoded(req.body) as any;
-      } else {
-        options['body'] = req.body;
+      if (contentType) {
+        headers.append('content-type', contentType);
+        if (contentType.indexOf('application/x-www-form-urlencoded') > -1) {
+          options.body = this.formUrlEncoded(req.body) as any;
+        } else {
+          options['body'] = req.body;
+        }
       }
     }
     return options;
@@ -128,6 +130,33 @@ export class ArcgisProxyService {
     return false;
   }
 
+  async printExecute(
+    req: Request,
+    options: RequestInit,
+    res: Response,
+    route: string,
+  ) {
+    try {
+      let url = this.getUrl(req);
+      const isRequiredToken = await this.isRequiredToken(url, options);
+      if (isRequiredToken) {
+        const token = await this.getToken(route);
+        url += `${url.indexOf('?') > -1 ? '&' : '?'}token=${token.token}`;
+      }
+      const resOp = await fetch(url, options);
+        const json = await resOp.json();
+        if(json.results?.length){
+          json.results.forEach((item)=>{
+            if(item.value?.url){
+              item.value.url = item.value.url.replace( this.getArcUrl(req),getOption(route).host+'/'+route);
+            }
+          })
+        }
+        res.send(json);
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
   async send(
     req: Request,
     options: RequestInit,
@@ -149,6 +178,10 @@ export class ArcgisProxyService {
       } else if (format === 'image') {
         const buffer = await resOp.buffer();
         res.contentType('image/png');
+        res.send(buffer);
+      }else if(format === 'pdf'){
+        const buffer = await resOp.buffer();
+        res.contentType('application/pdf');
         res.send(buffer);
       }
     } catch (error) {
